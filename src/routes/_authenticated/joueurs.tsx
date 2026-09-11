@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/useAuth";
-import { TEAMS, teamLabel, type Player } from "@/lib/rugby";
+import { PLAYER_TEAMS, teamLabel, type Player } from "@/lib/rugby";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -149,7 +149,7 @@ function PlayerDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Toutes équipes</SelectItem>
-                {TEAMS.map((t) => (
+                {PLAYER_TEAMS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
@@ -258,7 +258,7 @@ function JoueursPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Toutes équipes</SelectItem>
-                {TEAMS.map((t) => (
+                {PLAYER_TEAMS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
@@ -341,6 +341,7 @@ function JoueursPage() {
       </Card>
 
       <PlayerDialog
+        key={editing?.id ?? "new"}
         player={editing}
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

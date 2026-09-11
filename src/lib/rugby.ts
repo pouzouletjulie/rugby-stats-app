@@ -6,10 +6,26 @@ export const TEAMS = [
   { value: "senior_reserve", label: "Senior Réserve" },
 ] as const;
 
-export type TeamCode = (typeof TEAMS)[number]["value"];
+// Pour les joueurs : senior regroupe senior1 et senior_reserve
+export const PLAYER_TEAMS = [
+  { value: "junior", label: "Junior" },
+  { value: "cadet", label: "Cadet" },
+  { value: "feminine", label: "Féminine" },
+  { value: "senior", label: "Senior" },
+] as const;
 
-export const teamLabel = (code: string) =>
-  TEAMS.find((t) => t.value === code)?.label ?? code;
+export type TeamCode = (typeof TEAMS)[number]["value"] | "senior";
+
+const ALL_TEAM_LABELS: Record<string, string> = {
+  junior: "Junior",
+  cadet: "Cadet",
+  feminine: "Féminine",
+  senior1: "Senior 1",
+  senior_reserve: "Senior Réserve",
+  senior: "Senior",
+};
+
+export const teamLabel = (code: string) => ALL_TEAM_LABELS[code] ?? code;
 
 export const COMPETITION_TYPES = [
   "Championnat",
@@ -61,9 +77,13 @@ export const TURNOVER_NATURES = [
 ] as const;
 export const PENALTY_MOTIFS = [
   { value: "melee", label: "Mêlée" },
-  { value: "plaquage", label: "Plaquage" },
   { value: "hors_jeu", label: "Hors-jeu" },
-  { value: "autre", label: "Autre" },
+  { value: "perte_appui", label: "Perte d'appui" },
+  { value: "plaqueur_ruck", label: "Plaqueur dans le ruck" },
+  { value: "en_avant_volontaire", label: "En-avant volontaire" },
+  { value: "plaquage_haut", label: "Plaquage haut" },
+  { value: "plaquage_a_deux", label: "Plaquage à deux" },
+  { value: "autre", label: "Autre faute" },
 ] as const;
 export const CARD_COLORS = [
   { value: "blanc", label: "Blanc" },
@@ -367,6 +387,11 @@ export type PlayerStats = {
   plaquagesNeutres: number;
   jeuAuPied: number;
   jeuAuPiedGain: number;
+  japDrop: number;
+  japPenaltouche: number;
+  japTouche: number;
+  japChandelle: number;
+  japRasant: number;
   turnovers: number;
   penalites: number;
   cartons: number;
@@ -386,6 +411,11 @@ const emptyPlayer = (number: number): PlayerStats => ({
   plaquagesNeutres: 0,
   jeuAuPied: 0,
   jeuAuPiedGain: 0,
+  japDrop: 0,
+  japPenaltouche: 0,
+  japTouche: 0,
+  japChandelle: 0,
+  japRasant: 0,
   turnovers: 0,
   penalites: 0,
   cartons: 0,
@@ -500,6 +530,12 @@ export function computeStats(events: MatchEvent[]) {
         if (pl) {
           pl.jeuAuPied += 1;
           if (res === "gain") pl.jeuAuPiedGain += 1;
+          const kind = str(p["kind"]);
+          if (kind === "drop") pl.japDrop += 1;
+          else if (kind === "penaltouche") pl.japPenaltouche += 1;
+          else if (kind === "touche") pl.japTouche += 1;
+          else if (kind === "chandelle") pl.japChandelle += 1;
+          else if (kind === "rasant") pl.japRasant += 1;
         }
         break;
       }

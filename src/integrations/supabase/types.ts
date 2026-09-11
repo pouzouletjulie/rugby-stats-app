@@ -313,7 +313,7 @@ export type Database = {
       app_role: "lecteur" | "editeur" | "admin"
       match_status: "brouillon" | "en_cours" | "finalise"
       period_code: "mt1" | "mt2" | "additionnel"
-      team_code: "junior" | "cadet" | "feminine" | "senior1" | "senior_reserve"
+      team_code: "junior" | "cadet" | "feminine" | "senior1" | "senior_reserve" | "senior"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -444,7 +444,7 @@ export const Constants = {
       app_role: ["lecteur", "editeur", "admin"],
       match_status: ["brouillon", "en_cours", "finalise"],
       period_code: ["mt1", "mt2", "additionnel"],
-      team_code: ["junior", "cadet", "feminine", "senior1", "senior_reserve"],
+      team_code: ["junior", "cadet", "feminine", "senior1", "senior_reserve", "senior"],
     },
   },
 } as const
