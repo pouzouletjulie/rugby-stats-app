@@ -26,11 +26,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="pitch-gradient sticky top-0 z-30 border-b border-sidebar-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/matchs" className="flex items-center gap-2">
-            <span className="grid size-9 place-items-center rounded-md bg-sidebar-primary font-display text-lg font-bold text-sidebar-primary-foreground">
-              AS
+            <span className="grid size-9 place-items-center rounded-md bg-sidebar-primary text-xl">
+              🏉
             </span>
             <span className="font-display text-lg font-semibold uppercase tracking-wide text-sidebar-foreground">
-              AS Meudon <span className="text-sidebar-primary">Stats</span>
+              Rugby<span className="text-sidebar-primary">StatsApp</span>
             </span>
           </Link>
           <nav className="ml-auto flex items-center gap-1">

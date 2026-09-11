@@ -12,15 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Connexion — AS Meudon Rugby Stats" },
+      { title: "Connexion — RugbyStatsApp" },
       {
         name: "description",
-        content: "Connectez-vous pour consulter et saisir les statistiques des matchs de l'AS Meudon.",
+        content: "Connectez-vous pour consulter et saisir les statistiques de matchs.",
       },
-      { property: "og:title", content: "Connexion — AS Meudon Rugby Stats" },
+      { property: "og:title", content: "Connexion — RugbyStatsApp" },
       {
         property: "og:description",
-        content: "Accès réservé aux membres du club AS Meudon Rugby.",
+        content: "Accès à RugbyStatsApp.",
       },
     ],
   }),
@@ -100,11 +100,11 @@ function AuthPage() {
     <div className="pitch-gradient flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2">
-          <span className="grid size-10 place-items-center rounded-md bg-sidebar-primary font-display text-lg font-bold text-sidebar-primary-foreground">
-            AS
+          <span className="grid size-10 place-items-center rounded-md bg-sidebar-primary text-2xl">
+            🏉
           </span>
           <span className="font-display text-xl font-semibold uppercase tracking-wide text-sidebar-foreground">
-            AS Meudon Stats
+            Rugby<span className="text-sidebar-primary">StatsApp</span>
           </span>
         </Link>
         <Card className="shadow-panel">

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AS Meudon Rugby — Statistiques de matchs" },
+      { title: "RugbyStatsApp — Statistiques de matchs" },
       {
         name: "description",
         content:
-          "Collecte et consultation des statistiques de matchs du club AS Meudon Rugby : événements, scores et analyses par équipe.",
+          "Collecte et consultation des statistiques de matchs de rugby : événements, scores et analyses par équipe.",
       },
-      { property: "og:title", content: "AS Meudon Rugby — Statistiques de matchs" },
+      { property: "og:title", content: "RugbyStatsApp — Statistiques de matchs" },
       {
         property: "og:description",
         content:
@@ -27,7 +27,7 @@ function Landing() {
     <div className="min-h-screen">
       <section className="pitch-gradient text-sidebar-foreground">
         <div className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
-          <p className="label-kicker text-sidebar-primary">AS Meudon Rugby</p>
+          <p className="label-kicker text-sidebar-primary">RugbyStatsApp</p>
           <h1 className="mt-3 max-w-2xl text-4xl font-bold uppercase leading-[0.95] sm:text-6xl">
             La statistique du club, match après match
           </h1>
