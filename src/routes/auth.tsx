@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import type { Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,26 +35,32 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/matchs" });
-    });
-  }, [navigate]);
+    let navigated = false;
 
-  const afterAuth = async () => {
-    await supabase.rpc("claim_first_admin");
-    navigate({ to: "/matchs" });
-  };
+    const handleSession = async (session: Session | null) => {
+      if (session && !navigated) {
+        navigated = true;
+        await supabase.rpc("claim_first_admin");
+        navigate({ to: "/matchs" });
+      }
+    };
+
+    // Handles existing session on page load AND OAuth redirect return (code in URL)
+    supabase.auth.getSession().then(({ data }) => handleSession(data.session));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    await afterAuth();
+    if (error) toast.error(error.message);
   };
 
   const signUp = async (e: React.FormEvent) => {
@@ -75,22 +81,19 @@ function AuthPage() {
     }
     if (data.session) {
       toast.success("Compte créé — rôle Lecteur attribué");
-      await afterAuth();
     } else {
       toast.success("Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse.");
     }
   };
 
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
     });
-    if (result.error) {
-      toast.error("Connexion Google impossible");
-      return;
-    }
-    if (result.redirected) return;
-    await afterAuth();
+    if (error) toast.error("Connexion Google impossible");
   };
 
   return (
