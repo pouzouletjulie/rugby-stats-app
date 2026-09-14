@@ -598,6 +598,7 @@ function MatchPage() {
                 matchId={id}
                 format={match.format}
                 canEdit={editable}
+                team={match.team}
               />
             </CardContent>
           </Card>

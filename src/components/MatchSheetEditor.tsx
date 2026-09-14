@@ -13,6 +13,7 @@ type Props = {
   matchId: string;
   format: number;
   canEdit: boolean;
+  team: string;
 };
 
 function useMatchPlayers(matchId: string) {
@@ -225,7 +226,14 @@ function PlayerPicker({
   );
 }
 
-export function MatchSheetEditor({ matchId, format, canEdit }: Props) {
+// senior1 et senior_reserve partagent le même vivier de joueurs "senior"
+function teamFilter(matchTeam: string, playerTeam: string | null): boolean {
+  if (!playerTeam) return true;
+  if (matchTeam === "senior1" || matchTeam === "senior_reserve") return playerTeam === "senior";
+  return playerTeam === matchTeam;
+}
+
+export function MatchSheetEditor({ matchId, format, canEdit, team }: Props) {
   const qc = useQueryClient();
   const playersQ = useMatchPlayers(matchId);
   const allPlayersQ = useAllPlayers();
@@ -273,10 +281,12 @@ export function MatchSheetEditor({ matchId, format, canEdit }: Props) {
     void qc.invalidateQueries({ queryKey: ["match-players", matchId] });
   };
 
+  const teamPlayers = (allPlayersQ.data ?? []).filter((p) => teamFilter(team, p.team ?? null));
+
   const slotProps = (slot: PositionSlot) => ({
     slot,
     assigned: assignedMap.get(slot.number),
-    players: allPlayersQ.data ?? [],
+    players: teamPlayers,
     canEdit,
     onAssign: assign,
     onClear: clear,
@@ -311,7 +321,7 @@ export function MatchSheetEditor({ matchId, format, canEdit }: Props) {
         </div>
       </div>
 
-      {canEdit && (allPlayersQ.data ?? []).length === 0 && (
+      {canEdit && teamPlayers.length === 0 && (
         <p className="rounded-md border border-dashed px-4 py-3 text-center text-sm text-muted-foreground">
           Aucun joueur dans le registre.{" "}
           <a href="/joueurs" className="text-accent underline">
