@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Pencil, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, Lock, Pencil, RotateCcw, Trash2, Undo2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { EventForm, defaultDraft, type EventDraft } from "@/components/EventForm";
@@ -11,6 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -76,11 +86,13 @@ const EVENT_GROUPS = [
 
 function MatchPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const { canEdit, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [activeType, setActiveType] = useState<string | null>(null);
   const [editing, setEditing] = useState<MatchEvent | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const matchQ = useQuery({
     queryKey: ["match", id],
@@ -242,6 +254,16 @@ function MatchPage() {
     refresh();
   };
 
+  const deleteMatch = async () => {
+    await supabase.from("match_events").delete().eq("match_id", id);
+    await supabase.from("match_players").delete().eq("match_id", id);
+    const { error } = await supabase.from("matches").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    await logAudit({ action: "suppression", entity: "match", entityId: id, matchId: id });
+    toast.success("Match supprimé");
+    void navigate({ to: "/matchs" });
+  };
+
   const setStatus = async (status: "en_cours" | "finalise") => {
     const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
     const { error } = await supabase
@@ -298,7 +320,7 @@ function MatchPage() {
             </Badge>
             <span className="text-xs text-sidebar-foreground/70">
               {new Date(match.match_date).toLocaleDateString("fr-FR")} · {match.competition_type} ·{" "}
-              {match.location} · {match.field || "terrain n.c."} · {match.weather} · vent{" "}
+              {match.location} · {match.field || "terrain n.c."}{match.pitch_type ? ` (${match.pitch_type})` : ""} · {match.weather} · vent{" "}
               {match.wind} · rugby à {match.format}
             </span>
           </div>
@@ -350,6 +372,11 @@ function MatchPage() {
             {finalized && isAdmin && (
               <Button size="sm" variant="secondary" onClick={() => setStatus("en_cours")}>
                 <RotateCcw className="size-4" /> Réouvrir
+              </Button>
+            )}
+            {isAdmin && (
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="size-4" /> Supprimer
               </Button>
             )}
           </div>
@@ -572,6 +599,31 @@ function MatchPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              Supprimer ce match ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le match AS Meudon — {match.opponent} du{" "}
+              {new Date(match.match_date).toLocaleDateString("fr-FR")} ainsi que tous ses événements
+              et sa feuille de match seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={deleteMatch}
+            >
+              Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>

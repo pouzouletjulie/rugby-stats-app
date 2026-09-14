@@ -20,6 +20,7 @@ import {
   COMPETITION_TYPES,
   FORMATS,
   LOCATIONS,
+  PITCH_TYPES,
   TEAMS,
   WEATHERS,
   WINDS,
@@ -65,6 +66,7 @@ function NewMatchPage() {
     competition_type: "Championnat",
     location: "Domicile",
     field: "",
+    pitch_type: "Naturel",
     weather: "Ensoleillé",
     wind: "Nul",
     format: 15,
@@ -207,6 +209,21 @@ function NewMatchPage() {
             <div className="space-y-1.5">
               <Label htmlFor="field">Terrain</Label>
               <Input id="field" value={form.field} onChange={(e) => set("field", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type de terrain</Label>
+              <Select value={form.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PITCH_TYPES.map((pt) => (
+                    <SelectItem key={pt} value={pt}>
+                      {pt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Météo</Label>

@@ -82,6 +82,7 @@ export function fieldsFor(type: string): FieldDef[] {
       return [
         { k: "team", label: "Équipe sanctionnée" },
         { k: "select", key: "motif", label: "Motif", options: PENALTY_MOTIFS },
+        { k: "switch", key: "dix_metres", label: "10 mètres" },
         { k: "player" },
       ];
     case "carton":

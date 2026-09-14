@@ -37,6 +37,7 @@ export const COMPETITION_TYPES = [
 ] as const;
 
 export const LOCATIONS = ["Domicile", "Extérieur", "Terrain neutre"] as const;
+export const PITCH_TYPES = ["Naturel", "Synthétique", "Hybride"] as const;
 export const WEATHERS = ["Ensoleillé", "Couvert", "Pluie", "Neige", "Chaud", "Froid"] as const;
 export const WINDS = ["Nul", "Léger", "Modéré", "Fort", "Rafales"] as const;
 export const FORMATS = [15, 12, 10, 7] as const;
@@ -138,7 +139,7 @@ export const EVENT_LABELS: Record<string, string> = {
   melee: "Mêlée",
   touche: "Touche",
   turnover: "Turnover",
-  penalite: "Pénalité sifflée",
+  penalite: "Pénalité",
   carton: "Carton",
   points: "Points",
   entree_22: "Entrée dans les 22",
@@ -317,6 +318,7 @@ export function eventSummary(ev: MatchEvent): string {
       break;
     case "penalite":
       parts.push(PENALTY_MOTIFS.find((m) => m.value === str(p["motif"]))?.label ?? str(p["motif"]));
+      if (p["dix_metres"]) parts.push("10 m");
       break;
     case "carton":
       parts.push(CARD_COLORS.find((c) => c.value === str(p["couleur"]))?.label ?? str(p["couleur"]));
