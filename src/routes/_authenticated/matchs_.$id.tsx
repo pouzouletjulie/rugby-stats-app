@@ -139,6 +139,16 @@ function MatchPage() {
   const finalized = match?.status === "finalise";
   const editable = canEdit && !finalized;
 
+  const meudonPts = stats.sides.meudon.points;
+  const advPts = stats.sides.adversaire.points;
+  const meudonEssais = stats.sides.meudon.essais;
+  const advEssais = stats.sides.adversaire.essais;
+  const ptsDiff = Math.abs(meudonPts - advPts);
+  const meudonBD = meudonPts < advPts && ptsDiff < 8;
+  const adversaireBD = advPts < meudonPts && ptsDiff < 8;
+  const meudonBO = meudonEssais - advEssais >= 3;
+  const adversaireBO = advEssais - meudonEssais >= 3;
+
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["match-events", id] });
     void qc.invalidateQueries({ queryKey: ["match-audit", id] });
@@ -294,10 +304,24 @@ function MatchPage() {
           </div>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <h1 className="text-3xl font-bold uppercase">AS Meudon — {match.opponent}</h1>
-            <div className="font-display text-5xl font-bold tabular-nums">
-              {stats.sides.meudon.points}
-              <span className="mx-2 text-sidebar-foreground/50">–</span>
-              {stats.sides.adversaire.points}
+            <div className="flex items-center gap-3 font-display font-bold tabular-nums">
+              <div className="flex flex-col items-end gap-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-normal">
+                  <span className="text-sidebar-foreground/70">{meudonEssais} ess.</span>
+                  {meudonBO && <span className="rounded bg-emerald-500/80 px-1 text-white">BO</span>}
+                  {meudonBD && <span className="rounded bg-amber-500/80 px-1 text-white">BD</span>}
+                </div>
+                <span className="text-5xl">{meudonPts}</span>
+              </div>
+              <span className="text-4xl text-sidebar-foreground/50">–</span>
+              <div className="flex flex-col items-start gap-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-normal">
+                  {adversaireBD && <span className="rounded bg-amber-500/80 px-1 text-white">BD</span>}
+                  {adversaireBO && <span className="rounded bg-emerald-500/80 px-1 text-white">BO</span>}
+                  <span className="text-sidebar-foreground/70">{advEssais} ess.</span>
+                </div>
+                <span className="text-5xl">{advPts}</span>
+              </div>
             </div>
           </div>
           <p className="mt-2 text-xs text-sidebar-foreground/70">
@@ -335,7 +359,6 @@ function MatchPage() {
       <Tabs defaultValue="saisie" className="mt-6">
         <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="saisie" className="shrink-0">Saisie</TabsTrigger>
-          <TabsTrigger value="stats-match" className="shrink-0">Stats match</TabsTrigger>
           <TabsTrigger value="stats-joueurs" className="shrink-0">Stats joueurs</TabsTrigger>
           <TabsTrigger value="feuille" className="shrink-0">Feuille de match</TabsTrigger>
           <TabsTrigger value="historique" className="shrink-0">Historique</TabsTrigger>
@@ -450,53 +473,6 @@ function MatchPage() {
                   )}
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ── STATS MATCH ── */}
-        <TabsContent value="stats-match">
-          <Card>
-            <CardHeader>
-              <CardTitle className="uppercase">Comparatif collectif</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="py-2 font-display uppercase">Meudon</th>
-                    <th className="py-2 text-center font-display uppercase">Statistique</th>
-                    <th className="py-2 text-right font-display uppercase">Adversaire</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["Points", stats.sides.meudon.points, stats.sides.adversaire.points],
-                    ["Essais", stats.sides.meudon.essais, stats.sides.adversaire.essais],
-                    ["Transformations", stats.sides.meudon.transformations, stats.sides.adversaire.transformations],
-                    ["Pénalités au but", stats.sides.meudon.penalitesBut, stats.sides.adversaire.penalitesBut],
-                    ["Essais de pénalité", stats.sides.meudon.essaisPenalite, stats.sides.adversaire.essaisPenalite],
-                    [`Mêlées (gagnées)`, `${stats.sides.meudon.melees} (${stats.sides.meudon.meleesGagnees})`, `${stats.sides.adversaire.melees} (${stats.sides.adversaire.meleesGagnees})`],
-                    [`Touches (gagnées)`, `${stats.sides.meudon.touches} (${stats.sides.meudon.touchesGagnees})`, `${stats.sides.adversaire.touches} (${stats.sides.adversaire.touchesGagnees})`],
-                    ["Turnovers", stats.sides.meudon.turnovers, stats.sides.adversaire.turnovers],
-                    ["Pénalités concédées", stats.sides.meudon.penalitesConcedees, stats.sides.adversaire.penalitesConcedees],
-                    [`Cartons (B/J/R)`, `${stats.sides.meudon.cartons.blanc}/${stats.sides.meudon.cartons.jaune}/${stats.sides.meudon.cartons.rouge}`, `${stats.sides.adversaire.cartons.blanc}/${stats.sides.adversaire.cartons.jaune}/${stats.sides.adversaire.cartons.rouge}`],
-                    ["Entrées dans les 22", stats.sides.meudon.entrees22, stats.sides.adversaire.entrees22],
-                    ["50/22", stats.sides.meudon.cinquante22, stats.sides.adversaire.cinquante22],
-                    ["Passes", stats.sides.meudon.passes, stats.sides.adversaire.passes],
-                    ["Offloads", stats.sides.meudon.offloads, stats.sides.adversaire.offloads],
-                    ["Ballons touchés", stats.sides.meudon.ballonsTouches, stats.sides.adversaire.ballonsTouches],
-                    [`Plaquages (off/déf/n)`, `${stats.sides.meudon.plaquages.offensif}/${stats.sides.meudon.plaquages.defensif}/${stats.sides.meudon.plaquages.neutre}`, `${stats.sides.adversaire.plaquages.offensif}/${stats.sides.adversaire.plaquages.defensif}/${stats.sides.adversaire.plaquages.neutre}`],
-                    [`JAP (gain/perte)`, `${stats.sides.meudon.jeuAuPied.total} (${stats.sides.meudon.jeuAuPied.gain}/${stats.sides.meudon.jeuAuPied.perte})`, `${stats.sides.adversaire.jeuAuPied.total} (${stats.sides.adversaire.jeuAuPied.gain}/${stats.sides.adversaire.jeuAuPied.perte})`],
-                  ].map(([label, a, b]) => (
-                    <tr key={String(label)} className="border-b last:border-0">
-                      <td className="py-1.5 font-semibold tabular-nums">{a}</td>
-                      <td className="py-1.5 text-center text-muted-foreground">{label}</td>
-                      <td className="py-1.5 text-right font-semibold tabular-nums">{b}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </CardContent>
           </Card>
         </TabsContent>
