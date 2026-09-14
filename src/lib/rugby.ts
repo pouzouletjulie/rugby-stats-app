@@ -67,7 +67,15 @@ export const SIDES = [
 export const sideLabel = (side: string | null | undefined) =>
   side === "meudon" ? "AS Meudon" : side === "adversaire" ? "Adversaire" : "—";
 
-export const TOUCHE_ZONES = ["Nos 5m", "Milieu de terrain", "Leurs 5m"] as const;
+export const TOUCHE_ZONES = [
+  "Nos 5m",
+  "Nos 22m",
+  "Notre moitié",
+  "Milieu de terrain",
+  "Leur moitié",
+  "Leurs 22m",
+  "Leurs 5m",
+] as const;
 export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant"] as const;
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
@@ -95,7 +103,7 @@ export const CARD_COLORS = [
 export const POINT_KINDS = [
   { value: "essai", label: "Essai", points: 5 },
   { value: "transformation", label: "Transformation", points: 2 },
-  { value: "penalite_but", label: "Pénalité au but", points: 3 },
+  { value: "penalite_but", label: "Pénalité", points: 3 },
   { value: "essai_penalite", label: "Essai de pénalité", points: 7 },
 ] as const;
 export const PASS_KINDS = [

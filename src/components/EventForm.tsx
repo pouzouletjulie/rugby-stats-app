@@ -326,11 +326,11 @@ export function EventForm({
       })}
 
       <div className="flex gap-2 pt-1">
-        <Button type="button" onClick={() => onSubmit(draft)} className="flex-1">
+        <Button type="button" size="sm" onClick={() => onSubmit(draft)}>
           {submitLabel}
         </Button>
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" size="sm" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
         )}
