@@ -1,17 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   CARD_COLORS,
-  EVENT_LABELS,
   KICK_KINDS,
   KICK_RESULTS,
   PASS_KINDS,
@@ -131,6 +124,101 @@ export function defaultDraft(type: string, playerNumber: number | null = null): 
   return { event_type: type, team_side: "meudon", player_number: playerNumber, payload };
 }
 
+function BtnGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly Option[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+              value === opt.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background hover:bg-accent/10",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlayerField({
+  players,
+  value,
+  onChange,
+}: {
+  players: MatchPlayer[];
+  value: number | null;
+  onChange: (n: number | null) => void;
+}) {
+  const selected = players.find((p) => p.number === value);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Joueur (optionnel)
+        </p>
+        {value !== null && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+          >
+            Effacer
+          </button>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {Array.from({ length: 22 }, (_, i) => i + 1).map((n) => {
+          const mp = players.find((p) => p.number === n);
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(value === n ? null : n)}
+              title={mp ? `${mp.first_name ?? ""} ${mp.last_name ?? ""}`.trim() || `n°${n}` : `n°${n}`}
+              className={cn(
+                "size-9 rounded border text-sm font-bold tabular-nums transition-colors",
+                value === n
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : mp
+                    ? "border-border bg-background hover:bg-accent/10"
+                    : "border-dashed border-muted-foreground/20 text-muted-foreground/40 hover:bg-accent/5",
+              )}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <p className="text-xs text-muted-foreground">
+          n°{value} · {[selected.first_name, selected.last_name].filter(Boolean).join(" ")}
+          {selected.nickname ? ` « ${selected.nickname} »` : ""}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function EventForm({
   type,
   players,
@@ -150,125 +238,78 @@ export function EventForm({
     initial
       ? {
           event_type: initial.event_type,
-          team_side: initial.team_side ?? "meudon",
-          player_number: initial.player_number ?? null,
-          payload: { ...defaultDraft(initial.event_type).payload, ...(initial.payload ?? {}) },
+          team_side: initial.team_side,
+          player_number: initial.player_number,
+          payload: { ...(initial.payload as Record<string, unknown>) },
         }
       : defaultDraft(type),
   );
 
-  const fields = fieldsFor(draft.event_type);
   const setPayload = (key: string, value: unknown) =>
     setDraft((d) => ({ ...d, payload: { ...d.payload, [key]: value } }));
 
-  const numbers = players.length
-    ? players.map((p) => p.number).sort((a, b) => a - b)
-    : Array.from({ length: 22 }, (_, i) => i + 1);
+  const fields = useMemo(() => fieldsFor(type), [type]);
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(draft);
-      }}
-    >
-      <p className="label-kicker">{EVENT_LABELS[draft.event_type] ?? draft.event_type}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {fields.map((f) => {
-          if (f.k === "team") {
-            return (
-              <div key="team" className="space-y-1.5">
-                <Label>{f.label ?? "Équipe"}</Label>
-                <Select
-                  value={draft.team_side ?? "meudon"}
-                  onValueChange={(v) => setDraft((d) => ({ ...d, team_side: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SIDES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            );
-          }
-          if (f.k === "player") {
-            return (
-              <div key="player" className="space-y-1.5">
-                <Label>Joueur (optionnel)</Label>
-                <Select
-                  value={draft.player_number ? String(draft.player_number) : "none"}
-                  onValueChange={(v) =>
-                    setDraft((d) => ({ ...d, player_number: v === "none" ? null : Number(v) }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Non identifié</SelectItem>
-                    {numbers.map((n) => {
-                      const p = players.find((x) => x.number === n);
-                      const name = [p?.first_name, p?.last_name].filter(Boolean).join(" ");
-                      return (
-                        <SelectItem key={n} value={String(n)}>
-                          n°{n}
-                          {name ? ` — ${name}` : ""}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-            );
-          }
-          if (f.k === "switch") {
-            return (
-              <div key={f.key} className="flex items-center justify-between rounded-md border px-3 py-2">
-                <Label>{f.label}</Label>
-                <Switch
-                  checked={Boolean(draft.payload[f.key])}
-                  onCheckedChange={(v) => setPayload(f.key, v)}
-                />
-              </div>
-            );
-          }
+    <div className="space-y-4">
+      {fields.map((f, i) => {
+        if (f.k === "team") {
           return (
-            <div key={f.key} className="space-y-1.5">
-              <Label>{f.label}</Label>
-              <Select
-                value={String(draft.payload[f.key] ?? "")}
-                onValueChange={(v) => setPayload(f.key, v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {f.options.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <BtnGroup
+              key={i}
+              label={f.label ?? "Équipe"}
+              options={SIDES}
+              value={draft.team_side ?? "meudon"}
+              onChange={(v) => setDraft((d) => ({ ...d, team_side: v }))}
+            />
+          );
+        }
+        if (f.k === "select") {
+          return (
+            <BtnGroup
+              key={i}
+              label={f.label}
+              options={f.options}
+              value={String(draft.payload[f.key] ?? f.options[0]?.value ?? "")}
+              onChange={(v) => setPayload(f.key, v)}
+            />
+          );
+        }
+        if (f.k === "switch") {
+          return (
+            <div key={i} className="flex items-center gap-3">
+              <Switch
+                id={`sw-${f.key}`}
+                checked={Boolean(draft.payload[f.key])}
+                onCheckedChange={(v) => setPayload(f.key, v)}
+              />
+              <Label htmlFor={`sw-${f.key}`}>{f.label}</Label>
             </div>
           );
-        })}
-      </div>
-      <div className="flex justify-end gap-2">
+        }
+        if (f.k === "player") {
+          return (
+            <PlayerField
+              key={i}
+              players={players}
+              value={draft.player_number}
+              onChange={(n) => setDraft((d) => ({ ...d, player_number: n }))}
+            />
+          );
+        }
+        return null;
+      })}
+
+      <div className="flex gap-2 pt-1">
+        <Button type="button" onClick={() => onSubmit(draft)} className="flex-1">
+          {submitLabel}
+        </Button>
         {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
         )}
-        <Button type="submit">{submitLabel}</Button>
       </div>
-    </form>
+    </div>
   );
 }

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   EVENT_LABELS,
   PERIODS,
@@ -54,15 +55,31 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id")({
   notFoundComponent: () => <div className="p-6">Match introuvable.</div>,
 });
 
-const COLLECTIVE = ["melee", "touche", "turnover", "penalite", "carton", "points", "entree_22", "cinquante_22"];
+const EVENT_GROUPS = [
+  {
+    label: "Conquête",
+    types: ["melee", "touche"],
+  },
+  {
+    label: "Points & discipline",
+    types: ["points", "penalite", "carton"],
+  },
+  {
+    label: "Jeu courant",
+    types: ["turnover", "entree_22", "cinquante_22"],
+  },
+  {
+    label: "Individuel",
+    types: ["passe", "ballon_touche", "plaquage", "jeu_au_pied"],
+  },
+];
 
 function MatchPage() {
   const { id } = Route.useParams();
   const { canEdit, isAdmin } = useAuth();
   const qc = useQueryClient();
-  const [dialogType, setDialogType] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<string | null>(null);
   const [editing, setEditing] = useState<MatchEvent | null>(null);
-  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
 
   const matchQ = useQuery({
@@ -316,13 +333,15 @@ function MatchPage() {
       </Card>
 
       <Tabs defaultValue="saisie" className="mt-6">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="saisie">Saisie</TabsTrigger>
-          <TabsTrigger value="stats">Statistiques</TabsTrigger>
+          <TabsTrigger value="stats-match">Stats match</TabsTrigger>
+          <TabsTrigger value="stats-joueurs">Stats joueurs</TabsTrigger>
           <TabsTrigger value="feuille">Feuille de match</TabsTrigger>
-          <TabsTrigger value="audit">Historique</TabsTrigger>
+          <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
 
+        {/* ── SAISIE ── */}
         <TabsContent value="saisie" className="space-y-4">
           {!editable && (
             <p className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
@@ -331,85 +350,57 @@ function MatchPage() {
                 : "Votre rôle Lecteur permet uniquement la consultation."}
             </p>
           )}
-          <Card>
-            <CardHeader>
-              <CardTitle className="uppercase">Événements collectifs</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {COLLECTIVE.map((t) => (
-                <Button
-                  key={t}
-                  variant="outline"
-                  disabled={!editable}
-                  onClick={() => setDialogType(t)}
-                >
-                  {EVENT_LABELS[t]}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="uppercase">Statistiques individuelles</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="label-kicker mb-2">Joueur sélectionné</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Array.from({ length: 22 }, (_, i) => i + 1).map((n) => (
-                    <Button
-                      key={n}
-                      size="sm"
-                      variant={selectedPlayer === n ? "default" : "outline"}
-                      className="w-11 tabular-nums"
-                      onClick={() => setSelectedPlayer(selectedPlayer === n ? null : n)}
-                    >
-                      {n}
-                    </Button>
-                  ))}
+            <CardContent className="pt-5 space-y-5">
+              {EVENT_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="label-kicker mb-2 text-muted-foreground">{group.label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {group.types.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        disabled={!editable}
+                        onClick={() => setActiveType(activeType === t ? null : t)}
+                        className={cn(
+                          "rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40",
+                          activeType === t
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background hover:bg-accent/10",
+                        )}
+                      >
+                        {EVENT_LABELS[t]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {selectedPlayer
-                    ? playerName(players, selectedPlayer)
-                    : "Aucun joueur sélectionné (événement non attribué)"}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: "Passe", type: "passe", payload: { kind: "normale" } },
-                  { label: "Offload", type: "passe", payload: { kind: "offload" } },
-                  { label: "Ballon touché", type: "ballon_touche", payload: {} },
-                  { label: "Plaquage off.", type: "plaquage", payload: { kind: "offensif" } },
-                  { label: "Plaquage déf.", type: "plaquage", payload: { kind: "defensif" } },
-                  { label: "Plaquage neutre", type: "plaquage", payload: { kind: "neutre" } },
-                ].map((q) => (
-                  <Button
-                    key={q.label}
-                    variant="secondary"
-                    disabled={!editable}
-                    onClick={() =>
-                      insertEvent({
-                        event_type: q.type,
-                        team_side: "meudon",
-                        player_number: selectedPlayer,
-                        payload: q.payload,
-                      })
-                    }
-                  >
-                    {q.label}
-                  </Button>
-                ))}
-                <Button variant="outline" disabled={!editable} onClick={() => setDialogType("jeu_au_pied")}>
-                  Jeu au pied…
-                </Button>
-              </div>
+              ))}
+
+              {activeType && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <p className="mb-3 font-display text-sm font-semibold uppercase text-primary">
+                    {EVENT_LABELS[activeType]}
+                  </p>
+                  <EventForm
+                    key={activeType}
+                    type={activeType}
+                    players={players}
+                    submitLabel="Enregistrer"
+                    onSubmit={async (draft) => {
+                      await insertEvent(draft);
+                      setActiveType(null);
+                    }}
+                    onCancel={() => setActiveType(null)}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="uppercase">Journal des événements</CardTitle>
+              <CardTitle className="uppercase">Journal</CardTitle>
               <div className="flex items-center gap-2">
                 <Label htmlFor="showdel" className="text-xs text-muted-foreground">
                   Voir les supprimés
@@ -426,9 +417,10 @@ function MatchPage() {
               {visibleEvents.map((ev) => (
                 <div
                   key={ev.id}
-                  className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm ${
-                    ev.deleted_at ? "opacity-50 line-through" : ""
-                  }`}
+                  className={cn(
+                    "flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm",
+                    ev.deleted_at && "opacity-50 line-through",
+                  )}
                 >
                   <Badge variant="outline" className="shrink-0">
                     {periodLabel(ev.period)}
@@ -437,7 +429,7 @@ function MatchPage() {
                   <span className="text-muted-foreground">{eventSummary(ev)}</span>
                   {ev.team_side && (
                     <Badge variant="secondary" className="shrink-0">
-                      {ev.team_side === "meudon" ? "AS Meudon" : "Adversaire"}
+                      {ev.team_side === "meudon" ? "Meudon" : "Adversaire"}
                     </Badge>
                   )}
                   {editable && !ev.event_type.startsWith("debut_") && (
@@ -463,7 +455,8 @@ function MatchPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="stats" className="space-y-4">
+        {/* ── STATS MATCH ── */}
+        <TabsContent value="stats-match">
           <Card>
             <CardHeader>
               <CardTitle className="uppercase">Comparatif collectif</CardTitle>
@@ -472,7 +465,7 @@ function MatchPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left">
-                    <th className="py-2 font-display uppercase">AS Meudon</th>
+                    <th className="py-2 font-display uppercase">Meudon</th>
                     <th className="py-2 text-center font-display uppercase">Statistique</th>
                     <th className="py-2 text-right font-display uppercase">Adversaire</th>
                   </tr>
@@ -484,45 +477,21 @@ function MatchPage() {
                     ["Transformations", stats.sides.meudon.transformations, stats.sides.adversaire.transformations],
                     ["Pénalités au but", stats.sides.meudon.penalitesBut, stats.sides.adversaire.penalitesBut],
                     ["Essais de pénalité", stats.sides.meudon.essaisPenalite, stats.sides.adversaire.essaisPenalite],
-                    [
-                      "Mêlées (gagnées)",
-                      `${stats.sides.meudon.melees} (${stats.sides.meudon.meleesGagnees})`,
-                      `${stats.sides.adversaire.melees} (${stats.sides.adversaire.meleesGagnees})`,
-                    ],
-                    [
-                      "Touches (gagnées)",
-                      `${stats.sides.meudon.touches} (${stats.sides.meudon.touchesGagnees})`,
-                      `${stats.sides.adversaire.touches} (${stats.sides.adversaire.touchesGagnees})`,
-                    ],
+                    [`Mêlées (gagnées)`, `${stats.sides.meudon.melees} (${stats.sides.meudon.meleesGagnees})`, `${stats.sides.adversaire.melees} (${stats.sides.adversaire.meleesGagnees})`],
+                    [`Touches (gagnées)`, `${stats.sides.meudon.touches} (${stats.sides.meudon.touchesGagnees})`, `${stats.sides.adversaire.touches} (${stats.sides.adversaire.touchesGagnees})`],
                     ["Turnovers", stats.sides.meudon.turnovers, stats.sides.adversaire.turnovers],
-                    [
-                      "Pénalités concédées",
-                      stats.sides.meudon.penalitesConcedees,
-                      stats.sides.adversaire.penalitesConcedees,
-                    ],
-                    [
-                      "Cartons (B/J/R)",
-                      `${stats.sides.meudon.cartons.blanc}/${stats.sides.meudon.cartons.jaune}/${stats.sides.meudon.cartons.rouge}`,
-                      `${stats.sides.adversaire.cartons.blanc}/${stats.sides.adversaire.cartons.jaune}/${stats.sides.adversaire.cartons.rouge}`,
-                    ],
+                    ["Pénalités concédées", stats.sides.meudon.penalitesConcedees, stats.sides.adversaire.penalitesConcedees],
+                    [`Cartons (B/J/R)`, `${stats.sides.meudon.cartons.blanc}/${stats.sides.meudon.cartons.jaune}/${stats.sides.meudon.cartons.rouge}`, `${stats.sides.adversaire.cartons.blanc}/${stats.sides.adversaire.cartons.jaune}/${stats.sides.adversaire.cartons.rouge}`],
                     ["Entrées dans les 22", stats.sides.meudon.entrees22, stats.sides.adversaire.entrees22],
                     ["50/22", stats.sides.meudon.cinquante22, stats.sides.adversaire.cinquante22],
                     ["Passes", stats.sides.meudon.passes, stats.sides.adversaire.passes],
                     ["Offloads", stats.sides.meudon.offloads, stats.sides.adversaire.offloads],
                     ["Ballons touchés", stats.sides.meudon.ballonsTouches, stats.sides.adversaire.ballonsTouches],
-                    [
-                      "Plaquages (off/déf/neutre)",
-                      `${stats.sides.meudon.plaquages.offensif}/${stats.sides.meudon.plaquages.defensif}/${stats.sides.meudon.plaquages.neutre}`,
-                      `${stats.sides.adversaire.plaquages.offensif}/${stats.sides.adversaire.plaquages.defensif}/${stats.sides.adversaire.plaquages.neutre}`,
-                    ],
-                    [
-                      "Jeux au pied (gain/perte)",
-                      `${stats.sides.meudon.jeuAuPied.total} (${stats.sides.meudon.jeuAuPied.gain}/${stats.sides.meudon.jeuAuPied.perte})`,
-                      `${stats.sides.adversaire.jeuAuPied.total} (${stats.sides.adversaire.jeuAuPied.gain}/${stats.sides.adversaire.jeuAuPied.perte})`,
-                    ],
+                    [`Plaquages (off/déf/n)`, `${stats.sides.meudon.plaquages.offensif}/${stats.sides.meudon.plaquages.defensif}/${stats.sides.meudon.plaquages.neutre}`, `${stats.sides.adversaire.plaquages.offensif}/${stats.sides.adversaire.plaquages.defensif}/${stats.sides.adversaire.plaquages.neutre}`],
+                    [`JAP (gain/perte)`, `${stats.sides.meudon.jeuAuPied.total} (${stats.sides.meudon.jeuAuPied.gain}/${stats.sides.meudon.jeuAuPied.perte})`, `${stats.sides.adversaire.jeuAuPied.total} (${stats.sides.adversaire.jeuAuPied.gain}/${stats.sides.adversaire.jeuAuPied.perte})`],
                   ].map(([label, a, b]) => (
                     <tr key={String(label)} className="border-b last:border-0">
-                      <td className="py-1.5 font-semibold tabular-nums text-home">{a}</td>
+                      <td className="py-1.5 font-semibold tabular-nums">{a}</td>
                       <td className="py-1.5 text-center text-muted-foreground">{label}</td>
                       <td className="py-1.5 text-right font-semibold tabular-nums">{b}</td>
                     </tr>
@@ -531,10 +500,13 @@ function MatchPage() {
               </table>
             </CardContent>
           </Card>
+        </TabsContent>
 
+        {/* ── STATS JOUEURS ── */}
+        <TabsContent value="stats-joueurs">
           <Card>
             <CardHeader>
-              <CardTitle className="uppercase">Bilan individuel AS Meudon</CardTitle>
+              <CardTitle className="uppercase">Bilan individuel</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               {!stats.players.length && (
@@ -552,8 +524,8 @@ function MatchPage() {
                       <th>Passes</th>
                       <th>Offloads</th>
                       <th>Ballons</th>
-                      <th>Plaq. (o/d/n)</th>
-                      <th>Pied (gain)</th>
+                      <th>Plaq. o/d/n</th>
+                      <th>JAP (gain)</th>
                       <th>Turn.</th>
                       <th>Pén.</th>
                       <th>Cart.</th>
@@ -569,12 +541,8 @@ function MatchPage() {
                         <td>{p.passes}</td>
                         <td>{p.offloads}</td>
                         <td>{p.ballonsTouches}</td>
-                        <td>
-                          {p.plaquagesOffensifs}/{p.plaquagesDefensifs}/{p.plaquagesNeutres}
-                        </td>
-                        <td>
-                          {p.jeuAuPied} ({p.jeuAuPiedGain})
-                        </td>
+                        <td>{p.plaquagesOffensifs}/{p.plaquagesDefensifs}/{p.plaquagesNeutres}</td>
+                        <td>{p.jeuAuPied} ({p.jeuAuPiedGain})</td>
                         <td>{p.turnovers}</td>
                         <td>{p.penalites}</td>
                         <td>{p.cartons}</td>
@@ -588,6 +556,7 @@ function MatchPage() {
           </Card>
         </TabsContent>
 
+        {/* ── FEUILLE DE MATCH ── */}
         <TabsContent value="feuille">
           <Card>
             <CardHeader>
@@ -604,7 +573,8 @@ function MatchPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="audit">
+        {/* ── HISTORIQUE ── */}
+        <TabsContent value="historique">
           <Card>
             <CardHeader>
               <CardTitle className="uppercase">Historique des modifications</CardTitle>
@@ -627,25 +597,6 @@ function MatchPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <Dialog open={Boolean(dialogType)} onOpenChange={(o) => !o && setDialogType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{dialogType ? EVENT_LABELS[dialogType] : ""}</DialogTitle>
-          </DialogHeader>
-          {dialogType && (
-            <EventForm
-              type={dialogType}
-              players={players}
-              onSubmit={async (draft) => {
-                setDialogType(null);
-                await insertEvent(draft);
-              }}
-              onCancel={() => setDialogType(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>

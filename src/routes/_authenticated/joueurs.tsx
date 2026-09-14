@@ -78,8 +78,8 @@ function PlayerDialog({
 
   const onSubmit = async (values: PlayerForm) => {
     const payload = {
-      last_name: values.last_name.trim(),
-      first_name: values.first_name.trim(),
+      last_name: values.last_name.trim().toUpperCase(),
+      first_name: values.first_name.trim().toUpperCase(),
       birth_date: values.birth_date?.trim() || null,
       license_number: values.license_number?.trim() || null,
       first_row: values.first_row,
