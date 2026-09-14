@@ -333,12 +333,12 @@ function MatchPage() {
       </Card>
 
       <Tabs defaultValue="saisie" className="mt-6">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="saisie">Saisie</TabsTrigger>
-          <TabsTrigger value="stats-match">Stats match</TabsTrigger>
-          <TabsTrigger value="stats-joueurs">Stats joueurs</TabsTrigger>
-          <TabsTrigger value="feuille">Feuille de match</TabsTrigger>
-          <TabsTrigger value="historique">Historique</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="saisie" className="shrink-0">Saisie</TabsTrigger>
+          <TabsTrigger value="stats-match" className="shrink-0">Stats match</TabsTrigger>
+          <TabsTrigger value="stats-joueurs" className="shrink-0">Stats joueurs</TabsTrigger>
+          <TabsTrigger value="feuille" className="shrink-0">Feuille de match</TabsTrigger>
+          <TabsTrigger value="historique" className="shrink-0">Historique</TabsTrigger>
         </TabsList>
 
         {/* ── SAISIE ── */}
@@ -374,27 +374,26 @@ function MatchPage() {
                       </button>
                     ))}
                   </div>
+                  {activeType && group.types.includes(activeType) && (
+                    <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                      <p className="mb-3 font-display text-sm font-semibold uppercase text-primary">
+                        {EVENT_LABELS[activeType]}
+                      </p>
+                      <EventForm
+                        key={activeType}
+                        type={activeType}
+                        players={players}
+                        submitLabel="Enregistrer"
+                        onSubmit={async (draft) => {
+                          await insertEvent(draft);
+                          setActiveType(null);
+                        }}
+                        onCancel={() => setActiveType(null)}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
-
-              {activeType && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                  <p className="mb-3 font-display text-sm font-semibold uppercase text-primary">
-                    {EVENT_LABELS[activeType]}
-                  </p>
-                  <EventForm
-                    key={activeType}
-                    type={activeType}
-                    players={players}
-                    submitLabel="Enregistrer"
-                    onSubmit={async (draft) => {
-                      await insertEvent(draft);
-                      setActiveType(null);
-                    }}
-                    onCancel={() => setActiveType(null)}
-                  />
-                </div>
-              )}
             </CardContent>
           </Card>
 
