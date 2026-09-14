@@ -320,7 +320,7 @@ function MatchPage() {
             </Badge>
             <span className="text-xs text-sidebar-foreground/70">
               {new Date(match.match_date).toLocaleDateString("fr-FR")} · {match.competition_type} ·{" "}
-              {match.location} · {match.field || "terrain n.c."}{match.pitch_type ? ` (${match.pitch_type})` : ""} · {match.weather} · vent{" "}
+              {match.location}{match.pitch_type ? ` · ${match.pitch_type}` : ""} · {match.weather} · vent{" "}
               {match.wind} · rugby à {match.format}
             </span>
           </div>

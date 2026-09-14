@@ -65,7 +65,6 @@ function NewMatchPage() {
     opponent: "",
     competition_type: "Championnat",
     location: "Domicile",
-    field: "",
     pitch_type: "Naturel",
     weather: "Ensoleillé",
     wind: "Nul",
@@ -205,10 +204,6 @@ function NewMatchPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="field">Terrain</Label>
-              <Input id="field" value={form.field} onChange={(e) => set("field", e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Type de terrain</Label>
