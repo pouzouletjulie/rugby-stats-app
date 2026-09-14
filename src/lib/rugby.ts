@@ -73,6 +73,7 @@ export const TURNOVER_NATURES = [
   { value: "en_avant", label: "En-avant" },
   { value: "arrachage", label: "Arrachage" },
   { value: "interception", label: "Interception" },
+  { value: "touche", label: "Touche" },
   { value: "autre", label: "Autre" },
 ] as const;
 export const PENALTY_MOTIFS = [
@@ -99,6 +100,7 @@ export const POINT_KINDS = [
 export const PASS_KINDS = [
   { value: "normale", label: "Passe normale" },
   { value: "offload", label: "Offload" },
+  { value: "piston", label: "Passe piston" },
 ] as const;
 export const TACKLE_KINDS = [
   { value: "offensif", label: "Offensif" },
@@ -111,6 +113,9 @@ export const KICK_KINDS = [
   { value: "touche", label: "Touche" },
   { value: "chandelle", label: "Chandelle" },
   { value: "rasant", label: "Rasant" },
+  { value: "engagement", label: "Engagement" },
+  { value: "renvoi_22", label: "Renvoi aux 22" },
+  { value: "renvoi_enbut", label: "Renvoi en but" },
 ] as const;
 export const KICK_RESULTS = [
   { value: "gain", label: "Gain de terrain" },
@@ -392,6 +397,9 @@ export type PlayerStats = {
   japTouche: number;
   japChandelle: number;
   japRasant: number;
+  japEngagement: number;
+  japRenvoi22: number;
+  japRenvoiEnbut: number;
   turnovers: number;
   penalites: number;
   cartons: number;
@@ -416,6 +424,9 @@ const emptyPlayer = (number: number): PlayerStats => ({
   japTouche: 0,
   japChandelle: 0,
   japRasant: 0,
+  japEngagement: 0,
+  japRenvoi22: 0,
+  japRenvoiEnbut: 0,
   turnovers: 0,
   penalites: 0,
   cartons: 0,
@@ -536,6 +547,9 @@ export function computeStats(events: MatchEvent[]) {
           else if (kind === "touche") pl.japTouche += 1;
           else if (kind === "chandelle") pl.japChandelle += 1;
           else if (kind === "rasant") pl.japRasant += 1;
+          else if (kind === "engagement") pl.japEngagement += 1;
+          else if (kind === "renvoi_22") pl.japRenvoi22 += 1;
+          else if (kind === "renvoi_enbut") pl.japRenvoiEnbut += 1;
         }
         break;
       }
