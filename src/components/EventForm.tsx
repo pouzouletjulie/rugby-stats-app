@@ -189,6 +189,12 @@ function PlayerField({
       <div className="flex flex-wrap gap-1">
         {Array.from({ length: 22 }, (_, i) => i + 1).map((n) => {
           const mp = players.find((p) => p.number === n);
+          const initials = mp
+            ? [mp.first_name, mp.last_name]
+                .map((s) => s?.trim()[0]?.toUpperCase() ?? "")
+                .filter(Boolean)
+                .join("")
+            : null;
           return (
             <button
               key={n}
@@ -196,7 +202,8 @@ function PlayerField({
               onClick={() => onChange(value === n ? null : n)}
               title={mp ? `${mp.first_name ?? ""} ${mp.last_name ?? ""}`.trim() || `n°${n}` : `n°${n}`}
               className={cn(
-                "size-9 rounded border text-sm font-bold tabular-nums transition-colors",
+                "flex flex-col items-center justify-center rounded border transition-colors",
+                initials ? "h-11 w-11" : "size-9",
                 value === n
                   ? "border-primary bg-primary text-primary-foreground"
                   : mp
@@ -204,7 +211,14 @@ function PlayerField({
                     : "border-dashed border-muted-foreground/20 text-muted-foreground/40 hover:bg-accent/5",
               )}
             >
-              {n}
+              <span className="text-sm font-bold tabular-nums leading-none">{n}</span>
+              {initials && (
+                <span className={cn("mt-0.5 text-[9px] font-semibold leading-none tracking-tight",
+                  value === n ? "text-primary-foreground/80" : "text-muted-foreground",
+                )}>
+                  {initials}
+                </span>
+              )}
             </button>
           );
         })}
