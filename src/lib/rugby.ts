@@ -67,7 +67,8 @@ export const SIDES = [
 export const sideLabel = (side: string | null | undefined) =>
   side === "meudon" ? "AS Meudon" : side === "adversaire" ? "Adversaire" : "—";
 
-export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Mêlée", "Autre"] as const;
+export const TOUCHE_ZONES = ["Nos 5m", "Milieu de terrain", "Leurs 5m"] as const;
+export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant"] as const;
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
   { value: "en_avant", label: "En-avant" },

@@ -13,6 +13,7 @@ import {
   SIDES,
   TACKLE_KINDS,
   TOUCHE_SUITES,
+  TOUCHE_ZONES,
   TURNOVER_NATURES,
   ZONES,
   type MatchEvent,
@@ -40,7 +41,7 @@ export function fieldsFor(type: string): FieldDef[] {
   switch (type) {
     case "melee":
       return [
-        { k: "select", key: "zone", label: "Zone", options: opts(ZONES) },
+        { k: "select", key: "zone", label: "Zone", options: opts(TOUCHE_ZONES) },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
         {
@@ -55,11 +56,21 @@ export function fieldsFor(type: string): FieldDef[] {
       ];
     case "touche":
       return [
-        { k: "select", key: "zone", label: "Zone", options: opts(ZONES) },
+        { k: "select", key: "zone", label: "Zone", options: opts(TOUCHE_ZONES) },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
         { k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) },
-        { k: "switch", key: "bloc", label: "Bloc" },
+        {
+          k: "select",
+          key: "bloc",
+          label: "Bloc (lignes soulevées)",
+          options: [
+            { value: "0", label: "0" },
+            { value: "1", label: "1" },
+            { value: "2", label: "2" },
+            { value: "3", label: "3" },
+          ],
+        },
       ];
     case "turnover":
       return [
