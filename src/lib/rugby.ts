@@ -104,6 +104,7 @@ export const POINT_KINDS = [
   { value: "essai", label: "Essai", points: 5 },
   { value: "transformation", label: "Transformation", points: 2 },
   { value: "penalite_but", label: "Pénalité", points: 3 },
+  { value: "drop", label: "Drop", points: 3 },
   { value: "essai_penalite", label: "Essai de pénalité", points: 7 },
 ] as const;
 export const PASS_KINDS = [
@@ -117,7 +118,6 @@ export const TACKLE_KINDS = [
   { value: "neutre", label: "Neutre" },
 ] as const;
 export const KICK_KINDS = [
-  { value: "drop", label: "Drop" },
   { value: "penaltouche", label: "Pénaltouche" },
   { value: "touche", label: "Touche" },
   { value: "chandelle", label: "Chandelle" },
@@ -349,6 +349,7 @@ export type SideStats = {
   essais: number;
   transformations: number;
   penalitesBut: number;
+  drops: number;
   essaisPenalite: number;
   melees: number;
   meleesGagnees: number;
@@ -371,6 +372,7 @@ const emptySide = (): SideStats => ({
   essais: 0,
   transformations: 0,
   penalitesBut: 0,
+  drops: 0,
   essaisPenalite: 0,
   melees: 0,
   meleesGagnees: 0,
@@ -401,7 +403,6 @@ export type PlayerStats = {
   plaquagesNeutres: number;
   jeuAuPied: number;
   jeuAuPiedGain: number;
-  japDrop: number;
   japPenaltouche: number;
   japTouche: number;
   japChandelle: number;
@@ -428,7 +429,6 @@ const emptyPlayer = (number: number): PlayerStats => ({
   plaquagesNeutres: 0,
   jeuAuPied: 0,
   jeuAuPiedGain: 0,
-  japDrop: 0,
   japPenaltouche: 0,
   japTouche: 0,
   japChandelle: 0,
@@ -474,6 +474,7 @@ export function computeStats(events: MatchEvent[]) {
         if (kind === "essai") s.essais += 1;
         if (kind === "transformation") s.transformations += 1;
         if (kind === "penalite_but") s.penalitesBut += 1;
+        if (kind === "drop") s.drops += 1;
         if (kind === "essai_penalite") s.essaisPenalite += 1;
         if (pl) {
           pl.points += value;
@@ -551,8 +552,7 @@ export function computeStats(events: MatchEvent[]) {
           pl.jeuAuPied += 1;
           if (res === "gain") pl.jeuAuPiedGain += 1;
           const kind = str(p["kind"]);
-          if (kind === "drop") pl.japDrop += 1;
-          else if (kind === "penaltouche") pl.japPenaltouche += 1;
+          if (kind === "penaltouche") pl.japPenaltouche += 1;
           else if (kind === "touche") pl.japTouche += 1;
           else if (kind === "chandelle") pl.japChandelle += 1;
           else if (kind === "rasant") pl.japRasant += 1;
