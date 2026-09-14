@@ -1,6 +1,6 @@
 -- ROLES
 CREATE TYPE public.app_role AS ENUM ('lecteur', 'editeur', 'admin');
-CREATE TYPE public.team_code AS ENUM ('junior', 'cadet', 'feminine', 'senior1', 'senior_reserve');
+CREATE TYPE public.team_code AS ENUM ('junior', 'cadet', 'feminine', 'senior1', 'senior_reserve', 'senior');
 CREATE TYPE public.match_status AS ENUM ('brouillon', 'en_cours', 'finalise');
 CREATE TYPE public.period_code AS ENUM ('mt1', 'mt2', 'additionnel');
 
