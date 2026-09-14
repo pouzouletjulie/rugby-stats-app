@@ -82,8 +82,7 @@ export const TURNOVER_NATURES = [
   { value: "en_avant", label: "En-avant" },
   { value: "arrachage", label: "Arrachage" },
   { value: "interception", label: "Interception" },
-  { value: "touche", label: "Touche" },
-  { value: "autre", label: "Autre" },
+  { value: "ballon_coffre", label: "Ballon coffré" },
 ] as const;
 export const PENALTY_MOTIFS = [
   { value: "melee", label: "Mêlée" },
@@ -98,6 +97,7 @@ export const PENALTY_MOTIFS = [
 export const CARD_COLORS = [
   { value: "blanc", label: "Blanc" },
   { value: "jaune", label: "Jaune" },
+  { value: "bleu", label: "Bleu" },
   { value: "rouge", label: "Rouge" },
 ] as const;
 export const POINT_KINDS = [
