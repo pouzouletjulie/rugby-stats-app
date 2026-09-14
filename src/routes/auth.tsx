@@ -129,7 +129,7 @@ function AuthPage() {
                 <form onSubmit={signIn} className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="password">Mot de passe</Label>
@@ -137,6 +137,7 @@ function AuthPage() {
                       id="password"
                       type="password"
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -154,7 +155,7 @@ function AuthPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="email2">Email</Label>
-                    <Input id="email2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input id="email2" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="password2">Mot de passe</Label>
@@ -163,6 +164,7 @@ function AuthPage() {
                       type="password"
                       required
                       minLength={6}
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
