@@ -139,21 +139,6 @@ function NewMatchPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
-              <Label>Équipe AS Meudon</Label>
-              <Select value={form.team} onValueChange={(v) => set("team", v as TeamCode)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEAMS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
               <Label htmlFor="date">Date</Label>
               <Input
                 id="date"

@@ -339,6 +339,9 @@ export function eventSummary(ev: MatchEvent): string {
         KICK_RESULTS.find((r) => r.value === str(p["resultat"]))?.label ?? str(p["resultat"]),
       );
       break;
+    case "entree_22":
+      if (str(p["efficace"])) parts.push(str(p["efficace"]) === "oui" ? "Efficace" : "Non efficace");
+      break;
     default:
       break;
   }
@@ -361,6 +364,7 @@ export type SideStats = {
   penalitesConcedees: number;
   cartons: { blanc: number; jaune: number; rouge: number };
   entrees22: number;
+  entrees22Efficaces: number;
   cinquante22: number;
   passes: number;
   offloads: number;
@@ -384,6 +388,7 @@ const emptySide = (): SideStats => ({
   penalitesConcedees: 0,
   cartons: { blanc: 0, jaune: 0, rouge: 0 },
   entrees22: 0,
+  entrees22Efficaces: 0,
   cinquante22: 0,
   passes: 0,
   offloads: 0,
@@ -514,6 +519,7 @@ export function computeStats(events: MatchEvent[]) {
       }
       case "entree_22":
         s.entrees22 += 1;
+        if (str(p["efficace"]) === "oui") s.entrees22Efficaces += 1;
         break;
       case "cinquante_22":
         s.cinquante22 += 1;

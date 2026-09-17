@@ -98,7 +98,18 @@ export function fieldsFor(type: string): FieldDef[] {
         { k: "player" },
       ];
     case "entree_22":
-      return [{ k: "team", label: "Équipe qui entre dans les 22" }];
+      return [
+        { k: "team", label: "Équipe qui entre dans les 22" },
+        {
+          k: "select",
+          key: "efficace",
+          label: "Résultat",
+          options: [
+            { value: "oui", label: "Efficace" },
+            { value: "non", label: "Non efficace" },
+          ],
+        },
+      ];
     case "cinquante_22":
       return [{ k: "team", label: "Équipe" }, { k: "player" }];
     case "passe":
