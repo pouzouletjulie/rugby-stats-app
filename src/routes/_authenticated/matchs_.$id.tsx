@@ -201,7 +201,7 @@ function MatchPage() {
       matchId: id,
       details: { type: draft.event_type, ...draft.payload },
     });
-    if (draft.event_type === "touche" && draft.payload["en_avant"]) {
+    if (draft.event_type === "touche" && draft.payload["suite"] === "En-avant") {
       const possession = typeof draft.payload["possession"] === "string" ? draft.payload["possession"] : "meudon";
       await supabase.from("match_events").insert({
         match_id: id,

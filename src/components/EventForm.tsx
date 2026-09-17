@@ -60,7 +60,6 @@ export function fieldsFor(type: string): FieldDef[] {
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
         { k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) },
-        { k: "switch", key: "en_avant", label: "En-avant (crée aussi un événement en-avant)" },
         {
           k: "select",
           key: "bloc",
