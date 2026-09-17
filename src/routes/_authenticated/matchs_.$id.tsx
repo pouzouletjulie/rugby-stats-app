@@ -201,6 +201,18 @@ function MatchPage() {
       matchId: id,
       details: { type: draft.event_type, ...draft.payload },
     });
+    if (draft.event_type === "touche" && draft.payload["en_avant"]) {
+      const possession = typeof draft.payload["possession"] === "string" ? draft.payload["possession"] : "meudon";
+      await supabase.from("match_events").insert({
+        match_id: id,
+        period,
+        event_type: "en_avant",
+        team_side: possession,
+        player_number: null,
+        payload: {},
+        created_by: uid,
+      });
+    }
     refresh();
     if (!silent) toast.success(`${EVENT_LABELS[draft.event_type] ?? draft.event_type} enregistré`);
   };
@@ -389,11 +401,6 @@ function MatchPage() {
               </Button>
             )}
             {isAdmin && (
-              <Button size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10" onClick={() => setConfirmResetEvents(true)}>
-                <Trash2 className="size-4" /> Vider les événements
-              </Button>
-            )}
-            {isAdmin && (
               <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)}>
                 <Trash2 className="size-4" /> Supprimer
               </Button>
@@ -469,11 +476,18 @@ function MatchPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="uppercase">Journal</CardTitle>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="showdel" className="text-xs text-muted-foreground">
-                  Voir les supprimés
-                </Label>
-                <Switch id="showdel" checked={showDeleted} onCheckedChange={setShowDeleted} />
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmResetEvents(true)}>
+                    <Trash2 className="size-4" /> Vider
+                  </Button>
+                )}
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="showdel" className="text-xs text-muted-foreground">
+                    Voir les supprimés
+                  </Label>
+                  <Switch id="showdel" checked={showDeleted} onCheckedChange={setShowDeleted} />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-1.5">
