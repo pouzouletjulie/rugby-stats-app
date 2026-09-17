@@ -119,6 +119,7 @@ export const TACKLE_KINDS = [
   { value: "neutre", label: "Neutre" },
 ] as const;
 export const KICK_KINDS = [
+  { value: "cinquante_22", label: "50/22" },
   { value: "penaltouche", label: "Pénaltouche" },
   { value: "touche", label: "Touche" },
   { value: "chandelle", label: "Chandelle" },
@@ -139,6 +140,7 @@ export const EVENT_LABELS: Record<string, string> = {
   melee: "Mêlée",
   touche: "Touche",
   turnover: "Turnover",
+  en_avant: "En-avant",
   penalite: "Pénalité",
   carton: "Carton",
   points: "Points",
@@ -361,6 +363,7 @@ export type SideStats = {
   touches: number;
   touchesGagnees: number;
   turnovers: number;
+  enAvants: number;
   penalitesConcedees: number;
   cartons: { blanc: number; jaune: number; rouge: number };
   entrees22: number;
@@ -385,6 +388,7 @@ const emptySide = (): SideStats => ({
   touches: 0,
   touchesGagnees: 0,
   turnovers: 0,
+  enAvants: 0,
   penalitesConcedees: 0,
   cartons: { blanc: 0, jaune: 0, rouge: 0 },
   entrees22: 0,
@@ -503,6 +507,11 @@ export function computeStats(events: MatchEvent[]) {
         }
         break;
       }
+      case "en_avant":
+        s.enAvants += 1;
+        s.turnovers += 1;
+        if (pl) pl.turnovers += 1;
+        break;
       case "turnover":
         s.turnovers += 1;
         if (pl) pl.turnovers += 1;
@@ -556,10 +565,15 @@ export function computeStats(events: MatchEvent[]) {
         const res = str(p["resultat"]);
         if (res === "gain") s.jeuAuPied.gain += 1;
         else if (res === "perte") s.jeuAuPied.perte += 1;
+        const japKind = str(p["kind"]);
+        if (japKind === "cinquante_22") {
+          s.cinquante22 += 1;
+          if (pl) pl.cinquante22 += 1;
+        }
         if (pl) {
           pl.jeuAuPied += 1;
           if (res === "gain") pl.jeuAuPiedGain += 1;
-          const kind = str(p["kind"]);
+          const kind = japKind;
           if (kind === "penaltouche") pl.japPenaltouche += 1;
           else if (kind === "touche") pl.japTouche += 1;
           else if (kind === "chandelle") pl.japChandelle += 1;

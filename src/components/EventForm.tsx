@@ -72,6 +72,11 @@ export function fieldsFor(type: string): FieldDef[] {
           ],
         },
       ];
+    case "en_avant":
+      return [
+        { k: "team", label: "Équipe sanctionnée" },
+        { k: "player" },
+      ];
     case "turnover":
       return [
         { k: "team", label: "Équipe bénéficiaire" },

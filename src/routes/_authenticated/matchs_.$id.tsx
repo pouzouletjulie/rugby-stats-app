@@ -67,6 +67,10 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id")({
 
 const EVENT_GROUPS = [
   {
+    label: "Jeu courant",
+    types: ["en_avant", "turnover", "entree_22", "jeu_au_pied"],
+  },
+  {
     label: "Conquête",
     types: ["melee", "touche"],
   },
@@ -75,12 +79,8 @@ const EVENT_GROUPS = [
     types: ["points", "penalite", "carton"],
   },
   {
-    label: "Jeu courant",
-    types: ["turnover", "entree_22", "cinquante_22"],
-  },
-  {
     label: "Individuel",
-    types: ["passe", "ballon_touche", "plaquage", "jeu_au_pied"],
+    types: ["passe", "ballon_touche", "plaquage"],
   },
 ];
 
@@ -93,6 +93,7 @@ function MatchPage() {
   const [editing, setEditing] = useState<MatchEvent | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmResetEvents, setConfirmResetEvents] = useState(false);
 
   const matchQ = useQuery({
     queryKey: ["match", id],
@@ -254,6 +255,14 @@ function MatchPage() {
     refresh();
   };
 
+  const resetEvents = async () => {
+    const { error } = await supabase.from("match_events").delete().eq("match_id", id);
+    if (error) { toast.error(error.message); return; }
+    await logAudit({ action: "réinitialisation événements", entity: "match", entityId: id, matchId: id });
+    refresh();
+    toast.success("Événements supprimés");
+  };
+
   const deleteMatch = async () => {
     await supabase.from("match_events").delete().eq("match_id", id);
     await supabase.from("match_players").delete().eq("match_id", id);
@@ -372,6 +381,11 @@ function MatchPage() {
             {finalized && isAdmin && (
               <Button size="sm" variant="secondary" onClick={() => setStatus("en_cours")}>
                 <RotateCcw className="size-4" /> Réouvrir
+              </Button>
+            )}
+            {isAdmin && (
+              <Button size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10" onClick={() => setConfirmResetEvents(true)}>
+                <Trash2 className="size-4" /> Vider les événements
               </Button>
             )}
             {isAdmin && (
@@ -599,6 +613,30 @@ function MatchPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={confirmResetEvents} onOpenChange={setConfirmResetEvents}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              Vider tous les événements ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les {events.length} événements du match seront
+              définitivement supprimés. Le match lui-même sera conservé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={resetEvents}
+            >
+              Supprimer tous les événements
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
