@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { CalendarDays, Plus, Search } from "lucide-react";
+import { BarChart2, CalendarDays, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -147,31 +147,37 @@ function MatchesPage() {
           </Card>
         )}
         {filtered.map((m) => (
-          <Link key={m.id} to="/matchs/$id" params={{ id: m.id }} className="block">
-            <Card className="transition-colors hover:border-accent">
-              <CardContent className="flex flex-wrap items-center gap-4 py-4">
-                <div className="min-w-40 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{teamLabel(m.team)}</Badge>
-                    <Badge variant={m.status === "finalise" ? "default" : "outline"}>
-                      {STATUS_LABEL[m.status] ?? m.status}
-                    </Badge>
-                  </div>
-                  <h2 className="mt-2 text-xl font-semibold">AS Meudon — {m.opponent}</h2>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CalendarDays className="size-3.5" />
-                    {new Date(m.match_date).toLocaleDateString("fr-FR")} · {m.competition_type} ·{" "}
-                    {m.location} · {m.format}
-                  </p>
+          <Card key={m.id} className="transition-colors hover:border-accent">
+            <CardContent className="flex flex-wrap items-center gap-4 py-4">
+              <Link to="/matchs/$id" params={{ id: m.id }} className="min-w-40 flex-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{teamLabel(m.team)}</Badge>
+                  <Badge variant={m.status === "finalise" ? "default" : "outline"}>
+                    {STATUS_LABEL[m.status] ?? m.status}
+                  </Badge>
                 </div>
+                <h2 className="mt-2 text-xl font-semibold">AS Meudon — {m.opponent}</h2>
+                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CalendarDays className="size-3.5" />
+                  {new Date(m.match_date).toLocaleDateString("fr-FR")} · {m.competition_type} ·{" "}
+                  {m.location} · {m.format}
+                </p>
+              </Link>
+              <div className="flex items-center gap-4">
                 <div className="font-display text-3xl font-bold tabular-nums">
                   <span className="text-home">{m.score.meudon}</span>
                   <span className="mx-2 text-muted-foreground">–</span>
                   <span className="text-away">{m.score.adversaire}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/matchs/$id/analyse" params={{ id: m.id }}>
+                    <BarChart2 className="size-4" />
+                    Analyse
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </AppShell>
