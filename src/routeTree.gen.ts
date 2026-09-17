@@ -17,6 +17,7 @@ import { Route as AuthenticatedJoueursRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMatchsRouteImport } from './routes/_authenticated/matchs'
 import { Route as AuthenticatedMatchsIdRouteImport } from './routes/_authenticated/matchs_.$id'
 import { Route as AuthenticatedMatchsNouveauRouteImport } from './routes/_authenticated/matchs_.nouveau'
+import { Route as AuthenticatedMatchsIdAnalyseRouteImport } from './routes/_authenticated/matchs_.$id_.analyse'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,12 @@ const AuthenticatedMatchsNouveauRoute =
     path: '/matchs/nouveau',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMatchsIdAnalyseRoute =
+  AuthenticatedMatchsIdAnalyseRouteImport.update({
+    id: '/matchs_/$id_/analyse',
+    path: '/matchs/$id/analyse',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/matchs': typeof AuthenticatedMatchsRoute
   '/matchs/$id': typeof AuthenticatedMatchsIdRoute
   '/matchs/nouveau': typeof AuthenticatedMatchsNouveauRoute
+  '/matchs/$id/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/matchs': typeof AuthenticatedMatchsRoute
   '/matchs/$id': typeof AuthenticatedMatchsIdRoute
   '/matchs/nouveau': typeof AuthenticatedMatchsNouveauRoute
+  '/matchs/$id/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,13 +96,14 @@ export interface FileRoutesById {
   '/_authenticated/matchs': typeof AuthenticatedMatchsRoute
   '/_authenticated/matchs_/$id': typeof AuthenticatedMatchsIdRoute
   '/_authenticated/matchs_/nouveau': typeof AuthenticatedMatchsNouveauRoute
+  '/_authenticated/matchs_/$id_/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau'
+    '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau'
+  to: '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse'
   id:
     | '__root__'
     | '/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/_authenticated/matchs'
     | '/_authenticated/matchs_/$id'
     | '/_authenticated/matchs_/nouveau'
+    | '/_authenticated/matchs_/$id_/analyse'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMatchsNouveauRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/matchs_/$id_/analyse': {
+      id: '/_authenticated/matchs_/$id_/analyse'
+      path: '/matchs/$id/analyse'
+      fullPath: '/matchs/$id/analyse'
+      preLoaderRoute: typeof AuthenticatedMatchsIdAnalyseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -179,6 +197,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMatchsRoute: typeof AuthenticatedMatchsRoute
   AuthenticatedMatchsIdRoute: typeof AuthenticatedMatchsIdRoute
   AuthenticatedMatchsNouveauRoute: typeof AuthenticatedMatchsNouveauRoute
+  AuthenticatedMatchsIdAnalyseRoute: typeof AuthenticatedMatchsIdAnalyseRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -187,6 +206,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMatchsRoute: AuthenticatedMatchsRoute,
   AuthenticatedMatchsIdRoute: AuthenticatedMatchsIdRoute,
   AuthenticatedMatchsNouveauRoute: AuthenticatedMatchsNouveauRoute,
+  AuthenticatedMatchsIdAnalyseRoute: AuthenticatedMatchsIdAnalyseRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
