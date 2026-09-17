@@ -86,13 +86,13 @@ export const TURNOVER_NATURES = [
   { value: "ballon_coffre", label: "Ballon coffré" },
 ] as const;
 export const PENALTY_MOTIFS = [
+  { value: "plaquage_haut", label: "Plaquage haut" },
+  { value: "plaquage_a_deux", label: "Plaquage à deux" },
   { value: "melee", label: "Mêlée" },
   { value: "hors_jeu", label: "Hors-jeu" },
   { value: "perte_appui", label: "Perte d'appui" },
   { value: "plaqueur_ruck", label: "Plaqueur dans le ruck" },
   { value: "en_avant_volontaire", label: "En-avant volontaire" },
-  { value: "plaquage_haut", label: "Plaquage haut" },
-  { value: "plaquage_a_deux", label: "Plaquage à deux" },
   { value: "autre", label: "Autre faute" },
 ] as const;
 export const CARD_COLORS = [

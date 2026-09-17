@@ -68,7 +68,7 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id")({
 const EVENT_GROUPS = [
   {
     label: "Jeu courant",
-    types: ["en_avant", "turnover", "entree_22", "jeu_au_pied"],
+    types: ["en_avant", "turnover", "penalite", "entree_22", "jeu_au_pied"],
   },
   {
     label: "Conquête",
@@ -76,7 +76,7 @@ const EVENT_GROUPS = [
   },
   {
     label: "Points & discipline",
-    types: ["points", "penalite", "carton"],
+    types: ["points", "carton"],
   },
   {
     label: "Individuel",
@@ -256,7 +256,12 @@ function MatchPage() {
   };
 
   const resetEvents = async () => {
-    const { error } = await supabase.from("match_events").delete().eq("match_id", id);
+    const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+    const { error } = await supabase
+      .from("match_events")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: uid })
+      .eq("match_id", id)
+      .is("deleted_at", null);
     if (error) { toast.error(error.message); return; }
     await logAudit({ action: "réinitialisation événements", entity: "match", entityId: id, matchId: id });
     refresh();
