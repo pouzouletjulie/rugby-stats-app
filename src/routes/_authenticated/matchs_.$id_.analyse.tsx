@@ -114,7 +114,7 @@ function AnalysePage() {
   const blocLabel = (k: string) => {
     if (k === "true") return "Avec bloc";
     if (k === "false" || k === "0" || k === "") return "Sans bloc";
-    return `${k} ligne${k !== "1" ? "s" : ""}`;
+    return `${k} bloc${k !== "1" ? "s" : ""}`;
   };
 
   const meudonPts = stats.sides.meudon.points;
@@ -418,15 +418,6 @@ function AnalysePage() {
                       </tbody>
                     </table>
                   )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-xs uppercase text-muted-foreground">En-avants</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-0.5 text-sm">
-                  <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
-                  <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
                 </CardContent>
               </Card>
             </div>
