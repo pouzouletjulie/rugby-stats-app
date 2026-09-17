@@ -100,9 +100,7 @@ function AuthPage() {
     <div className="pitch-gradient flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2">
-          <span className="grid size-10 place-items-center rounded-md bg-sidebar-primary text-2xl">
-            🏉
-          </span>
+          <img src="/logo.png" alt="Logo" className="size-10 rounded-md object-contain" />
           <span className="font-display text-xl font-semibold uppercase tracking-wide text-sidebar-foreground">
             Rugby<span className="text-sidebar-primary">StatsApp</span>
           </span>
