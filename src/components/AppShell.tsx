@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="pitch-gradient sticky top-0 z-30 border-b border-sidebar-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/matchs" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="size-9 rounded-md object-contain" />
+            <img src="/logo2.png" alt="Logo" className="size-9 rounded-md object-contain" />
             <span className="font-display text-lg font-semibold uppercase tracking-wide text-sidebar-foreground">
               Rugby<span className="text-sidebar-primary">StatsApp</span>
             </span>
