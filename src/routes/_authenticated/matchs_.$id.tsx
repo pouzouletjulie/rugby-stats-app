@@ -160,6 +160,45 @@ function MatchPage() {
       .map(([motif, count]) => ({ motif, count }))
       .sort((a, b) => b.count - a.count);
   }, [events]);
+  const toucheAvants = useMemo(() => {
+    const r = {
+      meudon: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parSuite: {} as Record<string, number> },
+      adversaire: { total: 0, gagnees: 0, parBloc: {} as Record<string, number> },
+    };
+    for (const e of events) {
+      if (e.deleted_at || e.event_type !== "touche") continue;
+      const pos = String(e.payload?.["possession"] ?? "") === "adversaire" ? "adversaire" : "meudon";
+      const gain = String(e.payload?.["gain"] ?? "");
+      const bloc = String(e.payload?.["bloc"] ?? "0");
+      const suite = String(e.payload?.["suite"] ?? "");
+      r[pos].total += 1;
+      if (gain === pos) r[pos].gagnees += 1;
+      r[pos].parBloc[bloc] = (r[pos].parBloc[bloc] ?? 0) + 1;
+      if (pos === "meudon" && suite) r.meudon.parSuite[suite] = (r.meudon.parSuite[suite] ?? 0) + 1;
+    }
+    return r;
+  }, [events]);
+  const meleeAvants = useMemo(() => {
+    const r = {
+      meudon: { total: 0, gagnees: 0, parSortie: {} as Record<string, number> },
+      adversaire: { total: 0, gagnees: 0 },
+    };
+    for (const e of events) {
+      if (e.deleted_at || e.event_type !== "melee") continue;
+      const pos = String(e.payload?.["possession"] ?? "") === "adversaire" ? "adversaire" : "meudon";
+      const gain = String(e.payload?.["gain"] ?? "");
+      const sortie = String(e.payload?.["sortie"] ?? "");
+      r[pos].total += 1;
+      if (gain === pos) r[pos].gagnees += 1;
+      if (pos === "meudon" && sortie) r.meudon.parSortie[sortie] = (r.meudon.parSortie[sortie] ?? 0) + 1;
+    }
+    return r;
+  }, [events]);
+  const blocLabel = (k: string) => {
+    if (k === "true") return "Avec bloc";
+    if (k === "false" || k === "0" || k === "") return "Sans bloc";
+    return `${k} ligne${k !== "1" ? "s" : ""}`;
+  };
   const period = activePeriod(events);
   const finalized = match?.status === "finalise";
   const editable = canEdit && !finalized;
@@ -792,8 +831,159 @@ function MatchPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="avants">
-              <p className="py-12 text-center text-sm text-muted-foreground">À venir</p>
+            <TabsContent value="avants" className="mt-4 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Touche</h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {(["meudon", "adversaire"] as const).map((side) => {
+                    const t = toucheAvants[side];
+                    const perdues = t.total - t.gagnees;
+                    return (
+                      <Card key={side}>
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-xs uppercase text-muted-foreground">
+                            Touches — {side === "meudon" ? "AS Meudon" : "Adversaire"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold tabular-nums">{t.total}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Perdues : {perdues}{t.total > 0 ? ` (${Math.round(perdues / t.total * 100)} %)` : ""}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {(["meudon", "adversaire"] as const).map((side) => (
+                    <Card key={side}>
+                      <CardHeader>
+                        <CardTitle className="text-sm uppercase">
+                          Par bloc — {side === "meudon" ? "AS Meudon" : "Adversaire"}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {Object.keys(toucheAvants[side].parBloc).length === 0 ? (
+                          <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
+                        ) : (
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b text-xs uppercase text-muted-foreground">
+                                <th className="py-1.5 text-left">Bloc</th>
+                                <th className="py-1.5 text-right">Nb</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(toucheAvants[side].parBloc)
+                                .sort((a, b) => a[0].localeCompare(b[0]))
+                                .map(([k, v]) => (
+                                  <tr key={k} className="border-b last:border-0">
+                                    <td className="py-1.5">{blocLabel(k)}</td>
+                                    <td className="py-1.5 text-right tabular-nums font-medium">{v}</td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Suite de jeu — AS Meudon</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {Object.keys(toucheAvants.meudon.parSuite).length === 0 ? (
+                        <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
+                      ) : (
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b text-xs uppercase text-muted-foreground">
+                              <th className="py-1.5 text-left">Suite</th>
+                              <th className="py-1.5 text-right">Nb</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(toucheAvants.meudon.parSuite)
+                              .sort((a, b) => b[1] - a[1])
+                              .map(([suite, count]) => (
+                                <tr key={suite} className="border-b last:border-0">
+                                  <td className="py-1.5">{suite || "—"}</td>
+                                  <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-xs uppercase text-muted-foreground">En-avants</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-0.5 text-sm">
+                      <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
+                      <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Mêlée</h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {(["meudon", "adversaire"] as const).map((side) => {
+                    const m = meleeAvants[side];
+                    const perdues = m.total - m.gagnees;
+                    return (
+                      <Card key={side}>
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-xs uppercase text-muted-foreground">
+                            Mêlées — {side === "meudon" ? "AS Meudon" : "Adversaire"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold tabular-nums">{m.total}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Perdues : {perdues}{m.total > 0 ? ` (${Math.round(perdues / m.total * 100)} %)` : ""}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm uppercase">Sorties de mêlée — AS Meudon</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {Object.keys(meleeAvants.meudon.parSortie).length === 0 ? (
+                      <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left">Type</th>
+                            <th className="py-1.5 text-right">Nb</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(meleeAvants.meudon.parSortie)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([k, v]) => (
+                              <tr key={k} className="border-b last:border-0">
+                                <td className="py-1.5">{k === "8" ? "Sortie du 8" : k === "9" ? "Sortie du 9" : k}</td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{v}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
             <TabsContent value="trois-quarts">
               <p className="py-12 text-center text-sm text-muted-foreground">À venir</p>
