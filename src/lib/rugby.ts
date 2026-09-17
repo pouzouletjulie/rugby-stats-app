@@ -365,7 +365,7 @@ export type SideStats = {
   turnovers: number;
   enAvants: number;
   penalitesConcedees: number;
-  cartons: { blanc: number; jaune: number; rouge: number };
+  cartons: { blanc: number; jaune: number; bleu: number; rouge: number };
   entrees22: number;
   entrees22Efficaces: number;
   cinquante22: number;
@@ -390,7 +390,7 @@ const emptySide = (): SideStats => ({
   turnovers: 0,
   enAvants: 0,
   penalitesConcedees: 0,
-  cartons: { blanc: 0, jaune: 0, rouge: 0 },
+  cartons: { blanc: 0, jaune: 0, bleu: 0, rouge: 0 },
   entrees22: 0,
   entrees22Efficaces: 0,
   cinquante22: 0,
@@ -522,7 +522,7 @@ export function computeStats(events: MatchEvent[]) {
         break;
       case "carton": {
         const c = str(p["couleur"]);
-        if (c === "blanc" || c === "jaune" || c === "rouge") s.cartons[c] += 1;
+        if (c === "blanc" || c === "jaune" || c === "bleu" || c === "rouge") s.cartons[c] += 1;
         if (pl) pl.cartons += 1;
         break;
       }
