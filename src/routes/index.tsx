@@ -35,12 +35,9 @@ function Landing() {
             Saisie d'événements unitaires après-match ou en direct, scores calculés automatiquement,
             statistiques collectives et individuelles pour toutes les équipes du club.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8">
             <Button asChild size="lg" variant="default" className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90">
               <Link to="/auth">Se connecter</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent">
-              <Link to="/matchs">Voir les matchs</Link>
             </Button>
           </div>
         </div>
