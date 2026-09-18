@@ -179,9 +179,9 @@ function AnalysePage() {
       <Tabs defaultValue="general" className="mt-6">
         <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="general" className="shrink-0">Général</TabsTrigger>
-          <TabsTrigger value="avants" className="shrink-0">Focus avants</TabsTrigger>
-          <TabsTrigger value="trois-quarts" className="shrink-0">Focus 3/4</TabsTrigger>
-          <TabsTrigger value="joueurs" className="shrink-0">Détail joueur</TabsTrigger>
+          <TabsTrigger value="avants" className="shrink-0">Avants</TabsTrigger>
+          <TabsTrigger value="trois-quarts" className="shrink-0">3/4</TabsTrigger>
+          <TabsTrigger value="joueurs" className="shrink-0">Stat indiv</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-4 space-y-4">

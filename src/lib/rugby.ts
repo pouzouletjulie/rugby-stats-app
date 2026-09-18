@@ -93,6 +93,7 @@ export const PENALTY_MOTIFS = [
   { value: "perte_appui", label: "Perte d'appui" },
   { value: "plaqueur_ruck", label: "Plaqueur dans le ruck" },
   { value: "en_avant_volontaire", label: "En-avant volontaire" },
+  { value: "dix_metres_plus", label: "10m de plus" },
   { value: "autre", label: "Autre faute" },
 ] as const;
 export const CARD_COLORS = [
