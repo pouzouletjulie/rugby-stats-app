@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PENALTY_MOTIFS,
   computeStats,
+  playerName,
   teamLabel,
   type MatchEvent,
   type MatchPlayer,
@@ -481,8 +482,57 @@ function AnalysePage() {
         <TabsContent value="trois-quarts">
           <p className="py-12 text-center text-sm text-muted-foreground">À venir</p>
         </TabsContent>
-        <TabsContent value="joueurs">
-          <p className="py-12 text-center text-sm text-muted-foreground">À venir</p>
+        <TabsContent value="joueurs" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="uppercase">Bilan individuel</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              {!stats.players.length && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Aucun événement attribué à un joueur.
+                </p>
+              )}
+              {!!stats.players.length && (
+                <table className="w-full min-w-[46rem] text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                      <th className="py-2">Joueur</th>
+                      <th>Pts</th>
+                      <th>Essais</th>
+                      <th>Passes</th>
+                      <th>Offloads</th>
+                      <th>Ballons</th>
+                      <th>Plaq. o/d/n</th>
+                      <th>JAP (gain)</th>
+                      <th>Turn.</th>
+                      <th>Pén.</th>
+                      <th>Cart.</th>
+                      <th>50/22</th>
+                    </tr>
+                  </thead>
+                  <tbody className="tabular-nums">
+                    {stats.players.map((p) => (
+                      <tr key={p.number} className="border-b last:border-0">
+                        <td className="py-1.5 font-medium">{playerName(players, p.number)}</td>
+                        <td>{p.points}</td>
+                        <td>{p.essais}</td>
+                        <td>{p.passes}</td>
+                        <td>{p.offloads}</td>
+                        <td>{p.ballonsTouches}</td>
+                        <td>{p.plaquagesOffensifs}/{p.plaquagesDefensifs}/{p.plaquagesNeutres}</td>
+                        <td>{p.jeuAuPied} ({p.jeuAuPiedGain})</td>
+                        <td>{p.turnovers}</td>
+                        <td>{p.penalites}</td>
+                        <td>{p.cartons}</td>
+                        <td>{p.cinquante22}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </AppShell>
