@@ -678,6 +678,21 @@ function MatchPage() {
                         submitLabel="Enregistrer"
                         onSubmit={async (draft) => {
                           await insertEvent(draft);
+                          if (
+                            draft.event_type === "melee" &&
+                            draft.payload?.sortie === "bras_casse"
+                          ) {
+                            const gain = String(draft.payload?.gain ?? "meudon");
+                            await insertEvent(
+                              {
+                                event_type: "penalite",
+                                team_side: gain === "meudon" ? "adversaire" : "meudon",
+                                player_number: null,
+                                payload: { motif: "melee" },
+                              },
+                              true,
+                            );
+                          }
                           setActiveType(null);
                         }}
                         onCancel={() => setActiveType(null)}

@@ -51,6 +51,7 @@ export function fieldsFor(type: string): FieldDef[] {
           options: [
             { value: "8", label: "Sortie du 8" },
             { value: "9", label: "Sortie du 9" },
+            { value: "bras_casse", label: "Bras cassé (pénalité)" },
           ],
         },
       ];
@@ -86,7 +87,12 @@ export function fieldsFor(type: string): FieldDef[] {
     case "penalite":
       return [
         { k: "team", label: "Équipe sanctionnée" },
-        { k: "select", key: "motif", label: "Motif", options: PENALTY_MOTIFS },
+        {
+          k: "select",
+          key: "motif",
+          label: "Motif",
+          options: PENALTY_MOTIFS.filter((m) => m.value !== "melee"),
+        },
         { k: "player" },
       ];
     case "carton":
