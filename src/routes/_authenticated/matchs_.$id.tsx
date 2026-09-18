@@ -26,9 +26,16 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
+  COMPETITION_TYPES,
   EVENT_LABELS,
+  FORMATS,
+  LOCATIONS,
   PENALTY_MOTIFS,
   PERIODS,
+  PITCH_TYPES,
+  TEAMS,
+  WEATHERS,
+  WINDS,
   activePeriod,
   computeStats,
   eventSummary,
@@ -38,7 +45,16 @@ import {
   teamLabel,
   type MatchEvent,
   type MatchPlayer,
+  type TeamCode,
 } from "@/lib/rugby";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { logAudit, useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/_authenticated/matchs_/$id")({
@@ -65,6 +81,132 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id")({
   ),
   notFoundComponent: () => <div className="p-6">Match introuvable.</div>,
 });
+
+function MatchInfoDialog({
+  open,
+  match,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  match: Record<string, unknown>;
+  onClose: () => void;
+  onSave: (fields: Record<string, unknown>) => Promise<void>;
+}) {
+  const [form, setForm] = useState<Record<string, unknown>>({});
+  const m = match as {
+    team: TeamCode; opponent: string; match_date: string;
+    competition_type: string; location: string; pitch_type: string;
+    weather: string; wind: string; format: number;
+  };
+
+  const val = <K extends string>(key: K) =>
+    (form[key] ?? m[key as keyof typeof m]) as string;
+
+  const set = (key: string, value: unknown) => setForm((f) => ({ ...f, [key]: value }));
+
+  const save = async () => {
+    const payload = {
+      team: val("team"),
+      opponent: val("opponent"),
+      match_date: val("match_date"),
+      competition_type: val("competition_type"),
+      location: val("location"),
+      pitch_type: val("pitch_type"),
+      weather: val("weather"),
+      wind: val("wind"),
+      format: Number(val("format")),
+    };
+    await onSave(payload);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Modifier le match</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Équipe</Label>
+            <Select value={val("team")} onValueChange={(v) => set("team", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TEAMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Adversaire</Label>
+            <Input value={val("opponent")} onChange={(e) => set("opponent", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Date</Label>
+            <Input type="date" value={val("match_date")} onChange={(e) => set("match_date", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Type de rencontre</Label>
+            <Select value={val("competition_type")} onValueChange={(v) => set("competition_type", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {COMPETITION_TYPES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Localisation</Label>
+            <Select value={val("location")} onValueChange={(v) => set("location", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LOCATIONS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Type de terrain</Label>
+            <Select value={val("pitch_type")} onValueChange={(v) => set("pitch_type", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PITCH_TYPES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Météo</Label>
+            <Select value={val("weather")} onValueChange={(v) => set("weather", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {WEATHERS.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Vent</Label>
+            <Select value={val("wind")} onValueChange={(v) => set("wind", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {WINDS.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Format</Label>
+            <Select value={String(val("format"))} onValueChange={(v) => set("format", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FORMATS.map((f) => <SelectItem key={f} value={String(f)}>Rugby à {f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={onClose}>Annuler</Button>
+          <Button size="sm" onClick={save}>Enregistrer</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const EVENT_GROUPS = [
   {
@@ -93,6 +235,7 @@ function MatchPage() {
   const [activeType, setActiveType] = useState<string | null>(null);
   const [editing, setEditing] = useState<MatchEvent | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [editingMatchInfo, setEditingMatchInfo] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmResetEvents, setConfirmResetEvents] = useState(false);
 
@@ -368,6 +511,19 @@ function MatchPage() {
     toast.success(status === "finalise" ? "Match finalisé" : "Match réouvert");
   };
 
+  const updateMatch = async (fields: Partial<typeof match>) => {
+    const { error } = await supabase
+      .from("matches")
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    await logAudit({ action: "modification match", entity: "match", entityId: id, matchId: id, details: fields });
+    void qc.invalidateQueries({ queryKey: ["match", id] });
+    void qc.invalidateQueries({ queryKey: ["matches"] });
+    setEditingMatchInfo(false);
+    toast.success("Match mis à jour");
+  };
+
   if (matchQ.isLoading) return <AppShell>Chargement…</AppShell>;
   if (!match)
     return (
@@ -400,6 +556,16 @@ function MatchPage() {
               {match.location}{match.pitch_type ? ` · ${match.pitch_type}` : ""} · {match.weather} · vent{" "}
               {match.wind} · rugby à {match.format}
             </span>
+            {editable && (
+              <button
+                type="button"
+                onClick={() => setEditingMatchInfo(true)}
+                className="ml-auto rounded p-1 opacity-60 hover:opacity-100 transition-opacity"
+                aria-label="Modifier les infos du match"
+              >
+                <Pencil className="size-3.5 text-sidebar-foreground" />
+              </button>
+            )}
           </div>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <h1 className="text-3xl font-bold uppercase">AS Meudon — {match.opponent}</h1>
@@ -1034,6 +1200,13 @@ function MatchPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <MatchInfoDialog
+        open={editingMatchInfo}
+        match={match}
+        onClose={() => setEditingMatchInfo(false)}
+        onSave={updateMatch}
+      />
 
       <Dialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>

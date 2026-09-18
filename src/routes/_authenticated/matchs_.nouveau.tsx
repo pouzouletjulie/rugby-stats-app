@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -26,6 +25,7 @@ import {
   WINDS,
   type TeamCode,
 } from "@/lib/rugby";
+
 import { logAudit, useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/_authenticated/matchs_/nouveau")({
@@ -44,21 +44,10 @@ export const Route = createFileRoute("/_authenticated/matchs_/nouveau")({
   component: NewMatchPage,
 });
 
-type PlayerRow = { number: number; last_name: string; first_name: string; nickname: string };
-
 function NewMatchPage() {
   const navigate = useNavigate();
   const { canEdit } = useAuth();
   const [busy, setBusy] = useState(false);
-  const [withSheet, setWithSheet] = useState(false);
-  const [players, setPlayers] = useState<PlayerRow[]>(
-    Array.from({ length: 22 }, (_, i) => ({
-      number: i + 1,
-      last_name: "",
-      first_name: "",
-      nickname: "",
-    })),
-  );
   const [form, setForm] = useState({
     team: "senior1" as TeamCode,
     match_date: new Date().toISOString().slice(0, 10),
@@ -86,18 +75,6 @@ function NewMatchPage() {
       setBusy(false);
       toast.error(error?.message ?? "Création impossible");
       return;
-    }
-    if (withSheet) {
-      const rows = players
-        .filter((p) => p.last_name || p.first_name || p.nickname)
-        .map((p) => ({
-          match_id: data.id,
-          number: p.number,
-          last_name: p.last_name || null,
-          first_name: p.first_name || null,
-          nickname: p.nickname || null,
-        }));
-      if (rows.length) await supabase.from("match_players").insert(rows);
     }
     await logAudit({
       action: "création",
@@ -138,6 +115,21 @@ function NewMatchPage() {
             <CardTitle className="uppercase">Contexte</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Équipe</Label>
+              <Select value={form.team} onValueChange={(v) => set("team", v as TeamCode)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAMS.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="date">Date</Label>
               <Input
@@ -254,51 +246,6 @@ function NewMatchPage() {
               </Select>
             </div>
           </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="uppercase">Feuille de match (optionnelle)</CardTitle>
-            <Switch checked={withSheet} onCheckedChange={setWithSheet} />
-          </CardHeader>
-          {withSheet && (
-            <CardContent className="space-y-2">
-              {players.map((p, i) => (
-                <div key={p.number} className="grid grid-cols-[2.5rem_1fr_1fr_1fr] items-center gap-2">
-                  <span className="font-display text-lg font-semibold tabular-nums text-muted-foreground">
-                    {p.number}
-                  </span>
-                  <Input
-                    placeholder="Nom"
-                    value={p.last_name}
-                    onChange={(e) =>
-                      setPlayers((list) =>
-                        list.map((x, xi) => (xi === i ? { ...x, last_name: e.target.value } : x)),
-                      )
-                    }
-                  />
-                  <Input
-                    placeholder="Prénom"
-                    value={p.first_name}
-                    onChange={(e) =>
-                      setPlayers((list) =>
-                        list.map((x, xi) => (xi === i ? { ...x, first_name: e.target.value } : x)),
-                      )
-                    }
-                  />
-                  <Input
-                    placeholder="Surnom"
-                    value={p.nickname}
-                    onChange={(e) =>
-                      setPlayers((list) =>
-                        list.map((x, xi) => (xi === i ? { ...x, nickname: e.target.value } : x)),
-                      )
-                    }
-                  />
-                </div>
-              ))}
-            </CardContent>
-          )}
         </Card>
 
         <div className="flex justify-end">
