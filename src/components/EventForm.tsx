@@ -187,14 +187,18 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
         ];
       }
       if (kind === "degagement") {
-        return [
+        const fields: FieldDef[] = [
           ...base,
           { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "switch", key: "touche", label: "Sorti en touche" },
-          { k: "switch", key: "cinquante_22", label: "50/22" },
-          { k: "player" },
         ];
+        if (payload?.["touche"] === true) {
+          fields.push({ k: "switch", key: "touche_directe", label: "Touche directe" });
+        }
+        fields.push({ k: "switch", key: "cinquante_22", label: "50/22" });
+        fields.push({ k: "player" });
+        return fields;
       }
       if (kind === "renvoi_22" || kind === "renvoi_enbut") {
         return [
@@ -406,9 +410,10 @@ export function EventForm({
 
   const kickKind = type === "jeu_au_pied" ? String(draft.payload["kind"] ?? "") : "";
   const joueVite = type === "touche" ? Boolean(draft.payload["joue_vite"]) : false;
+  const degagementTouche = kickKind === "degagement" ? Boolean(draft.payload["touche"]) : false;
   const fields = useMemo(
     () => fieldsFor(type, draft.payload, draft.team_side),
-    [type, kickKind, joueVite, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+    [type, kickKind, joueVite, degagementTouche, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
