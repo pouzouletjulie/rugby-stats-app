@@ -36,41 +36,58 @@ function FieldZoneBar({
   adversaire: Record<string, number>;
 }) {
   const hasData = ZONE_ORDER.some((z) => (meudon[z] ?? 0) + (adversaire[z] ?? 0) > 0);
-  if (!hasData) return <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>;
 
   return (
     <div className="space-y-3">
-      {(["meudon", "adversaire"] as const).map((side) => {
-        const counts = side === "meudon" ? meudon : adversaire;
-        const total = ZONE_ORDER.reduce((s, z) => s + (counts[z] ?? 0), 0);
-        if (total === 0) return null;
-        return (
-          <div key={side}>
-            <p className="mb-1 text-xs text-muted-foreground">{side === "meudon" ? "AS Meudon" : "Adversaire"} · {total}</p>
-            <div className="flex h-7 overflow-hidden rounded-md border">
-              {ZONE_ORDER.map((zone, i) => {
-                const count = counts[zone] ?? 0;
-                if (count === 0) return null;
-                const pct = (count / total) * 100;
-                return (
-                  <div
-                    key={zone}
-                    className="flex items-center justify-center text-[10px] font-bold text-white"
-                    style={{ width: `${pct}%`, backgroundColor: ZONE_COLORS[i] }}
-                    title={`${zone} : ${count}`}
-                  >
-                    {count}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
       <div className="flex justify-between text-[9px] text-muted-foreground">
         <span>← Nos 5m</span>
         <span>Leurs 5m →</span>
       </div>
+
+      {(["meudon", "adversaire"] as const).map((side) => {
+        const counts = side === "meudon" ? meudon : adversaire;
+        const total = ZONE_ORDER.reduce((s, z) => s + (counts[z] ?? 0), 0);
+        return (
+          <div key={side}>
+            <p className="mb-1 text-xs text-muted-foreground">
+              {side === "meudon" ? "AS Meudon" : "Adversaire"} · {total}
+            </p>
+            <div style={{ display: "flex", height: 28, width: "100%", borderRadius: 6, overflow: "hidden", border: "1px solid #e5e7eb" }}>
+              {!hasData || total === 0 ? (
+                <div style={{ flex: 1, backgroundColor: "#f3f4f6" }} />
+              ) : (
+                ZONE_ORDER.map((zone, i) => {
+                  const count = counts[zone] ?? 0;
+                  if (count === 0) return null;
+                  return (
+                    <div
+                      key={zone}
+                      title={`${zone} : ${count}`}
+                      style={{
+                        flex: count,
+                        backgroundColor: ZONE_COLORS[i],
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#fff",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {count}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {!hasData && (
+        <p className="text-xs text-muted-foreground">Aucune donnée de zone</p>
+      )}
     </div>
   );
 }
