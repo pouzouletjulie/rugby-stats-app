@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ import {
   TEAMS,
   WEATHERS,
   WINDS,
+  type Championship,
   type TeamCode,
 } from "@/lib/rugby";
 
@@ -58,6 +60,19 @@ function NewMatchPage() {
     weather: "Ensoleillé",
     wind: "Nul",
     format: 15,
+    championship_id: null as string | null,
+  });
+
+  const champsQ = useQuery({
+    queryKey: ["championships"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("championships")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Championship[];
+    },
   });
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -167,6 +182,36 @@ function NewMatchPage() {
                 </SelectContent>
               </Select>
             </div>
+            {(() => {
+              const filtered = (champsQ.data ?? []).filter(
+                (c) =>
+                  (!c.team || c.team === form.team) &&
+                  (!c.competition_type || c.competition_type === form.competition_type) &&
+                  c.active,
+              );
+              if (!filtered.length) return null;
+              return (
+                <div className="space-y-1.5">
+                  <Label>Championnat</Label>
+                  <Select
+                    value={form.championship_id ?? "__none__"}
+                    onValueChange={(v) => set("championship_id", v === "__none__" ? null : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Aucun —</SelectItem>
+                      {filtered.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} ({c.season})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })()}
             <div className="space-y-1.5">
               <Label>Localisation</Label>
               <Select value={form.location} onValueChange={(v) => set("location", v)}>

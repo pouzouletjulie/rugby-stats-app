@@ -27,6 +27,16 @@ const ALL_TEAM_LABELS: Record<string, string> = {
 
 export const teamLabel = (code: string) => ALL_TEAM_LABELS[code] ?? code;
 
+export type Championship = {
+  id: string;
+  name: string;
+  season: string;
+  competition_type: string | null;
+  team: string | null;
+  active: boolean;
+  created_at: string;
+};
+
 export const COMPETITION_TYPES = [
   "Championnat",
   "Coupe",

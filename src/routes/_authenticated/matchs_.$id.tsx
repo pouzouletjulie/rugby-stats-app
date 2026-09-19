@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Pencil, RotateCcw, Trash2, Undo2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, BarChart2, Lock, Pencil, RotateCcw, Trash2, Undo2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { EventForm, defaultDraft, type EventDraft } from "@/components/EventForm";
@@ -43,6 +43,7 @@ import {
   periodStarted,
   playerName,
   teamLabel,
+  type Championship,
   type MatchEvent,
   type MatchPlayer,
   type TeamCode,
@@ -98,14 +99,44 @@ function MatchInfoDialog({
     team: TeamCode; opponent: string; match_date: string;
     competition_type: string; location: string; pitch_type: string;
     weather: string; wind: string; format: number;
+    championship_id: string | null;
   };
+
+  const champsQ = useQuery({
+    queryKey: ["championships"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("championships")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Championship[];
+    },
+  });
 
   const val = <K extends string>(key: K) =>
     (form[key] ?? m[key as keyof typeof m]) as string;
 
   const set = (key: string, value: unknown) => setForm((f) => ({ ...f, [key]: value }));
 
+  const currentTeam = val("team");
+  const currentCompType = val("competition_type");
+  const filteredChamps = (champsQ.data ?? []).filter(
+    (c) =>
+      (!c.team || c.team === currentTeam) &&
+      (!c.competition_type || c.competition_type === currentCompType) &&
+      c.active,
+  );
+
+  const champSelectVal = () => {
+    const v = form["championship_id"] !== undefined
+      ? (form["championship_id"] as string | null)
+      : m.championship_id;
+    return v ?? "__none__";
+  };
+
   const save = async () => {
+    const rawChampId = champSelectVal();
     const payload = {
       team: val("team"),
       opponent: val("opponent"),
@@ -116,6 +147,7 @@ function MatchInfoDialog({
       weather: val("weather"),
       wind: val("wind"),
       format: Number(val("format")),
+      championship_id: rawChampId === "__none__" ? null : rawChampId,
     };
     await onSave(payload);
   };
@@ -198,6 +230,25 @@ function MatchInfoDialog({
               </SelectContent>
             </Select>
           </div>
+          {filteredChamps.length > 0 && (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Championnat</Label>
+              <Select
+                value={champSelectVal()}
+                onValueChange={(v) => set("championship_id", v === "__none__" ? null : v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Aucun —</SelectItem>
+                  {filteredChamps.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} ({c.season})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" size="sm" onClick={onClose}>Annuler</Button>
@@ -568,7 +619,14 @@ function MatchPage() {
             )}
           </div>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-            <h1 className="text-3xl font-bold uppercase">AS Meudon — {match.opponent}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold uppercase">AS Meudon — {match.opponent}</h1>
+              <Button asChild size="sm" variant="secondary" className="shrink-0">
+                <Link to="/matchs/$id/analyse" params={{ id }}>
+                  <BarChart2 className="size-4" /> Analyse
+                </Link>
+              </Button>
+            </div>
             <div className="flex items-center gap-3 font-display font-bold tabular-nums">
               <div className="flex flex-col items-end gap-0.5">
                 <div className="flex items-center gap-1.5 text-xs font-normal">
