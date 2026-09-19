@@ -55,19 +55,18 @@ function FieldZoneBar({
                     key={zone}
                     title={`${zone} : ${count}`}
                     style={{
-                      flex: count > 0 ? count : 0.25,
+                      flex: 1,
                       backgroundColor: count > 0 ? ZONE_COLORS[i] : "#f3f4f6",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 700,
-                      color: count > 0 ? "#fff" : "transparent",
+                      color: count > 0 ? "#fff" : "#d1d5db",
                       borderRight: i < 6 ? "1px solid #e5e7eb" : undefined,
-                      overflow: "hidden",
                     }}
                   >
-                    {count > 0 ? count : ""}
+                    {count}
                   </div>
                 );
               })}
