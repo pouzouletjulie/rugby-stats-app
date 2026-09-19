@@ -302,6 +302,8 @@ const str = (v: unknown) => (typeof v === "string" ? v : "");
 export function pointsValue(ev: MatchEvent): number {
   if (ev.event_type !== "points") return 0;
   const kind = str(ev.payload?.["kind"]);
+  const isKick = kind === "transformation" || kind === "penalite_but" || kind === "drop";
+  if (isKick && ev.payload?.["reussi"] === false) return 0;
   return POINT_KINDS.find((k) => k.value === kind)?.points ?? 0;
 }
 
@@ -333,10 +335,13 @@ export function eventSummary(ev: MatchEvent): string {
     case "carton":
       parts.push(CARD_COLORS.find((c) => c.value === str(p["couleur"]))?.label ?? str(p["couleur"]));
       break;
-    case "points":
-      parts.push(POINT_KINDS.find((k) => k.value === str(p["kind"]))?.label ?? str(p["kind"]));
-      parts.push(`${pointsValue(ev)} pts`);
+    case "points": {
+      const pkind = str(p["kind"]);
+      parts.push(POINT_KINDS.find((k) => k.value === pkind)?.label ?? pkind);
+      const val = pointsValue(ev);
+      parts.push(val === 0 && p["reussi"] === false ? "Raté" : `${val} pts`);
       break;
+    }
     case "passe":
       parts.push(PASS_KINDS.find((k) => k.value === str(p["kind"]))?.label ?? str(p["kind"]));
       break;
@@ -366,8 +371,11 @@ export type SideStats = {
   points: number;
   essais: number;
   transformations: number;
+  transformationsTentees: number;
   penalitesBut: number;
+  penalitesButTentees: number;
   drops: number;
+  dropsTentes: number;
   essaisPenalite: number;
   melees: number;
   meleesGagnees: number;
@@ -391,8 +399,11 @@ const emptySide = (): SideStats => ({
   points: 0,
   essais: 0,
   transformations: 0,
+  transformationsTentees: 0,
   penalitesBut: 0,
+  penalitesButTentees: 0,
   drops: 0,
+  dropsTentes: 0,
   essaisPenalite: 0,
   melees: 0,
   meleesGagnees: 0,
@@ -492,11 +503,21 @@ export function computeStats(events: MatchEvent[]) {
       case "points": {
         const kind = str(p["kind"]);
         const value = pointsValue(ev);
+        const reussi = p["reussi"] !== false; // true by default for non-kick events
         s.points += value;
         if (kind === "essai") s.essais += 1;
-        if (kind === "transformation") s.transformations += 1;
-        if (kind === "penalite_but") s.penalitesBut += 1;
-        if (kind === "drop") s.drops += 1;
+        if (kind === "transformation") {
+          s.transformationsTentees += 1;
+          if (reussi) s.transformations += 1;
+        }
+        if (kind === "penalite_but") {
+          s.penalitesButTentees += 1;
+          if (reussi) s.penalitesBut += 1;
+        }
+        if (kind === "drop") {
+          s.dropsTentes += 1;
+          if (reussi) s.drops += 1;
+        }
         if (kind === "essai_penalite") s.essaisPenalite += 1;
         if (pl) {
           pl.points += value;

@@ -122,12 +122,17 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
         { k: "select", key: "couleur", label: "Couleur", options: CARD_COLORS },
         { k: "player" },
       ];
-    case "points":
-      return [
+    case "points": {
+      const pointsKind = String(payload?.["kind"] ?? "essai");
+      const isKick = pointsKind === "transformation" || pointsKind === "penalite_but" || pointsKind === "drop";
+      const fields: FieldDef[] = [
         { k: "team", label: "Équipe" },
         { k: "select", key: "kind", label: "Type", options: POINT_KINDS },
-        { k: "player" },
       ];
+      if (isKick) fields.push({ k: "switch", key: "reussi", label: "Réussi" });
+      fields.push({ k: "player" });
+      return fields;
+    }
     case "entree_22":
       return [
         { k: "team", label: "Équipe qui entre dans les 22" },
@@ -409,11 +414,12 @@ export function EventForm({
     setDraft((d) => ({ ...d, payload: { ...d.payload, [key]: value } }));
 
   const kickKind = type === "jeu_au_pied" ? String(draft.payload["kind"] ?? "") : "";
+  const pointsKind = type === "points" ? String(draft.payload["kind"] ?? "") : "";
   const joueVite = type === "touche" ? Boolean(draft.payload["joue_vite"]) : false;
   const degagementTouche = kickKind === "degagement" ? Boolean(draft.payload["touche"]) : false;
   const fields = useMemo(
     () => fieldsFor(type, draft.payload, draft.team_side),
-    [type, kickKind, joueVite, degagementTouche, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+    [type, kickKind, pointsKind, joueVite, degagementTouche, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
@@ -450,6 +456,9 @@ export function EventForm({
               onChange={(v) => {
                 if (type === "jeu_au_pied" && f.key === "kind") {
                   setDraft((d) => ({ ...d, payload: { kind: v } }));
+                } else if (type === "points" && f.key === "kind") {
+                  const isKick = v === "transformation" || v === "penalite_but" || v === "drop";
+                  setDraft((d) => ({ ...d, payload: { kind: v, ...(isKick ? { reussi: true } : {}) } }));
                 } else {
                   setPayload(f.key, v);
                 }

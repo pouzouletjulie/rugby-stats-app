@@ -42,6 +42,7 @@ function FieldZoneBar({
       {(["meudon", "adversaire"] as const).map((side) => {
         const counts = side === "meudon" ? meudon : adversaire;
         const total = ZONE_ORDER.reduce((s, z) => s + (counts[z] ?? 0), 0);
+        if (total === 0) return null;
         return (
           <div key={side}>
             <p className="mb-1 text-xs text-muted-foreground">
@@ -330,18 +331,42 @@ function AnalysePage() {
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Transformations <span className="text-xs text-muted-foreground">(×2)</span></td>
-                    <td className="py-1.5 text-right">{stats.sides.meudon.transformations}</td>
-                    <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.meudon.transformationsTentees > 0
+                        ? `${stats.sides.meudon.transformations}/${stats.sides.meudon.transformationsTentees} (${pct(stats.sides.meudon.transformations, stats.sides.meudon.transformationsTentees)})`
+                        : stats.sides.meudon.transformations}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.adversaire.transformationsTentees > 0
+                        ? `${stats.sides.adversaire.transformations}/${stats.sides.adversaire.transformationsTentees} (${pct(stats.sides.adversaire.transformations, stats.sides.adversaire.transformationsTentees)})`
+                        : stats.sides.adversaire.transformations}
+                    </td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Pénalités au but <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">{stats.sides.meudon.penalitesBut}</td>
-                    <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.meudon.penalitesButTentees > 0
+                        ? `${stats.sides.meudon.penalitesBut}/${stats.sides.meudon.penalitesButTentees} (${pct(stats.sides.meudon.penalitesBut, stats.sides.meudon.penalitesButTentees)})`
+                        : stats.sides.meudon.penalitesBut}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.adversaire.penalitesButTentees > 0
+                        ? `${stats.sides.adversaire.penalitesBut}/${stats.sides.adversaire.penalitesButTentees} (${pct(stats.sides.adversaire.penalitesBut, stats.sides.adversaire.penalitesButTentees)})`
+                        : stats.sides.adversaire.penalitesBut}
+                    </td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">{stats.sides.meudon.drops}</td>
-                    <td className="py-1.5 text-right">{stats.sides.adversaire.drops}</td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.meudon.dropsTentes > 0
+                        ? `${stats.sides.meudon.drops}/${stats.sides.meudon.dropsTentes} (${pct(stats.sides.meudon.drops, stats.sides.meudon.dropsTentes)})`
+                        : stats.sides.meudon.drops}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.adversaire.dropsTentes > 0
+                        ? `${stats.sides.adversaire.drops}/${stats.sides.adversaire.dropsTentes} (${pct(stats.sides.adversaire.drops, stats.sides.adversaire.dropsTentes)})`
+                        : stats.sides.adversaire.drops}
+                    </td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Essais de pénalité <span className="text-xs text-muted-foreground">(×7)</span></td>
@@ -633,6 +658,28 @@ function AnalysePage() {
           </div>
         </TabsContent>
         <TabsContent value="trois-quarts" className="mt-4 space-y-6">
+
+          {/* ── RÉSUMÉ ── */}
+          {(() => {
+            const totalJAP = japTroisQuarts.engagement.total + japTroisQuarts.degagement.total + japTroisQuarts.chandelle.total + japTroisQuarts.rasantRenvoi.total;
+            const totalReussis = japTroisQuarts.engagement.recupere + japTroisQuarts.degagement.gainTerrain + japTroisQuarts.chandelle.recupere + japTroisQuarts.rasantRenvoi.gainTerrain;
+            return (
+              <div className="grid grid-cols-2 gap-3">
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <p className="text-2xl font-bold tabular-nums">{totalJAP}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Coups de pied</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <p className="text-2xl font-bold tabular-nums">{pct(totalReussis, totalJAP)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Réussite au pied</p>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })()}
 
           {/* ── ENGAGEMENT ── */}
           <div className="space-y-3">
