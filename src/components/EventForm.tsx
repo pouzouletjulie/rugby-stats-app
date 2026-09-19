@@ -32,6 +32,7 @@ type Option = { value: string; label: string };
 type FieldDef =
   | { k: "team"; label?: string }
   | { k: "player" }
+  | { k: "zone"; key: string; label: string }
   | { k: "select"; key: string; label: string; options: readonly Option[] }
   | { k: "switch"; key: string; label: string };
 
@@ -41,7 +42,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
   switch (type) {
     case "melee":
       return [
-        { k: "select", key: "zone", label: "Zone", options: opts(TOUCHE_ZONES) },
+        { k: "zone", key: "zone", label: "Zone" },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
         {
@@ -57,7 +58,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
       ];
     case "touche":
       return [
-        { k: "select", key: "zone", label: "Zone", options: opts(TOUCHE_ZONES) },
+        { k: "zone", key: "zone", label: "Zone" },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
         { k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) },
@@ -151,7 +152,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
       if (kind === "chandelle" || kind === "box_kick") {
         return [
           ...base,
-          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "recupere", label: "Récupéré" },
           { k: "player" },
         ];
@@ -159,7 +160,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
       if (kind === "rasant") {
         return [
           ...base,
-          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "switch", key: "touche", label: "Sorti en touche" },
           { k: "player" },
@@ -168,7 +169,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
       if (kind === "degagement") {
         return [
           ...base,
-          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "switch", key: "touche", label: "Sorti en touche" },
           { k: "switch", key: "cinquante_22", label: "50/22" },
@@ -178,7 +179,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
       if (kind === "renvoi_22" || kind === "renvoi_enbut") {
         return [
           ...base,
-          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "player" },
         ];
@@ -194,9 +195,55 @@ export function defaultDraft(type: string, playerNumber: number | null = null): 
   const payload: Record<string, unknown> = {};
   for (const f of fieldsFor(type)) {
     if (f.k === "select") payload[f.key] = f.options[0]?.value ?? "";
+    if (f.k === "zone") payload[f.key] = TOUCHE_ZONES[3]; // milieu de terrain par défaut
     if (f.k === "switch") payload[f.key] = false;
   }
   return { event_type: type, team_side: "meudon", player_number: playerNumber, payload };
+}
+
+const ZONE_SHORT = ["Nos 5m", "Nos 22m", "Nôtre ½", "Milieu", "Leur ½", "Leurs 22m", "Leurs 5m"];
+
+function ZoneSlider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const idx = Math.max(0, (TOUCHE_ZONES as readonly string[]).indexOf(value));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <span className="text-xs font-medium">{TOUCHE_ZONES[idx]}</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={6}
+        step={1}
+        value={idx}
+        onChange={(e) => onChange(TOUCHE_ZONES[Number(e.target.value)])}
+        className="w-full accent-primary"
+      />
+      <div className="grid grid-cols-7 gap-0">
+        {ZONE_SHORT.map((label, i) => (
+          <span
+            key={i}
+            className={cn(
+              "text-center text-[8px] leading-tight px-px",
+              i === idx ? "text-primary font-bold" : "text-muted-foreground/60",
+            )}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function BtnGroup({
@@ -351,6 +398,16 @@ export function EventForm({
               options={SIDES}
               value={draft.team_side ?? "meudon"}
               onChange={(v) => setDraft((d) => ({ ...d, team_side: v }))}
+            />
+          );
+        }
+        if (f.k === "zone") {
+          return (
+            <ZoneSlider
+              key={i}
+              label={f.label}
+              value={String(draft.payload[f.key] ?? TOUCHE_ZONES[3])}
+              onChange={(v) => setPayload(f.key, v)}
             />
           );
         }
