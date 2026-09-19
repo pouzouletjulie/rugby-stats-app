@@ -80,7 +80,7 @@ function AuthPage() {
       return;
     }
     if (data.session) {
-      toast.success("Compte créé — rôle Lecteur attribué");
+      toast.success("Compte créé — en attente de validation par un administrateur");
     } else {
       toast.success("Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse.");
     }
@@ -109,8 +109,7 @@ function AuthPage() {
           <CardHeader>
             <CardTitle className="uppercase">Accès au club</CardTitle>
             <CardDescription>
-              Toute nouvelle inscription reçoit le rôle Lecteur. Un administrateur peut ensuite le
-              promouvoir.
+              Toute nouvelle inscription est soumise à validation par un administrateur.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -4,11 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "lecteur" | "editeur" | "admin";
 
+const PREVIEW_KEY = "rugby_preview_lecteur";
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewMode, setPreviewModeState] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem(PREVIEW_KEY) === "true",
+  );
+
+  const setPreviewMode = (val: boolean) => {
+    localStorage.setItem(PREVIEW_KEY, String(val));
+    setPreviewModeState(val);
+  };
 
   async function fetchRoles(userId: string) {
     const { data } = await supabase
@@ -46,11 +56,17 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const isAdmin = roles.includes("admin");
-  const canEdit = roles.includes("editeur") || isAdmin;
+  const realIsAdmin = roles.includes("admin");
+  const isAdmin = realIsAdmin && !previewMode;
+  const canEdit = (roles.includes("editeur") || realIsAdmin) && !previewMode;
   const highestRole: Role = isAdmin ? "admin" : canEdit ? "editeur" : "lecteur";
+  const isPending = !loading && !!user && roles.length === 0;
 
-  return { session, user, roles, loading, isAdmin, canEdit, highestRole };
+  return {
+    session, user, roles, loading,
+    isAdmin, canEdit, highestRole,
+    isPending, previewMode, setPreviewMode, realIsAdmin,
+  };
 }
 
 export async function logAudit(params: {

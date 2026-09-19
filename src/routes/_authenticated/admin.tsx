@@ -193,16 +193,46 @@ function AdminPage() {
     );
   }
 
+  const pendingUsers = (usersQ.data ?? []).filter((u) => u.roles.length === 0);
+  const activeUsers = (usersQ.data ?? []).filter((u) => u.roles.length > 0);
+
   return (
     <AppShell>
       <h1 className="text-3xl font-bold uppercase">Administration</h1>
+
+      {pendingUsers.length > 0 && (
+        <Card className="mt-6 border-amber-300">
+          <CardHeader>
+            <CardTitle className="uppercase flex items-center gap-2">
+              Inscriptions en attente
+              <Badge variant="default" className="bg-amber-500">{pendingUsers.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingUsers.map((u) => (
+              <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                <div className="min-w-48 flex-1">
+                  <p className="text-sm font-medium">{u.full_name || u.email}</p>
+                  <p className="text-xs text-muted-foreground">{u.email}</p>
+                </div>
+                <Button size="sm" onClick={() => setRole(u.id, "lecteur")}>
+                  Approuver (Lecteur)
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setRole(u.id, "editeur")}>
+                  Approuver (Éditeur)
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="uppercase">Utilisateurs et rôles</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {(usersQ.data ?? []).map((u) => {
+          {activeUsers.map((u) => {
             const current: Role = u.roles.includes("admin")
               ? "admin"
               : u.roles.includes("editeur")
@@ -230,6 +260,9 @@ function AdminPage() {
               </div>
             );
           })}
+          {activeUsers.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">Aucun utilisateur actif.</p>
+          )}
         </CardContent>
       </Card>
 

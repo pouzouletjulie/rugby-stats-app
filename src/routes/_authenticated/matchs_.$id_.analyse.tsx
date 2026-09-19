@@ -321,6 +321,7 @@ function AnalysePage() {
         </TabsList>
 
         <TabsContent forceMount value="general" className="mt-4 space-y-4">
+          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">Général</h2>
           {/* Points détaillés */}
           <Card>
             <CardHeader>
@@ -480,6 +481,7 @@ function AnalysePage() {
         </TabsContent>
 
         <TabsContent forceMount value="avants" className="mt-4 space-y-6">
+          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">Avants</h2>
 
           {/* ── TOUCHE ── */}
           <div className="space-y-3">
@@ -658,28 +660,7 @@ function AnalysePage() {
           </div>
         </TabsContent>
         <TabsContent forceMount value="trois-quarts" className="mt-4 space-y-6">
-
-          {/* ── RÉSUMÉ ── */}
-          {(() => {
-            const totalJAP = japTroisQuarts.engagement.total + japTroisQuarts.degagement.total + japTroisQuarts.chandelle.total + japTroisQuarts.rasantRenvoi.total;
-            const totalReussis = japTroisQuarts.engagement.recupere + japTroisQuarts.degagement.gainTerrain + japTroisQuarts.chandelle.recupere + japTroisQuarts.rasantRenvoi.gainTerrain;
-            return (
-              <div className="grid grid-cols-2 gap-3">
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-2xl font-bold tabular-nums">{totalJAP}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Coups de pied</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-2xl font-bold tabular-nums">{pct(totalReussis, totalJAP)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Réussite au pied</p>
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })()}
+          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">3/4 — Jeu au pied</h2>
 
           {/* ── ENGAGEMENT ── */}
           <div className="space-y-3">
@@ -770,6 +751,7 @@ function AnalysePage() {
 
         </TabsContent>
         <TabsContent forceMount value="joueurs" className="mt-4">
+          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide mb-4">Statistiques individuelles</h2>
           {(() => {
             const toggleIndivSort = (key: IndivSortKey) => {
               if (indivSortKey === key) setIndivSortDir((d) => (d === "asc" ? "desc" : "asc"));
