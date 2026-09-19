@@ -175,3 +175,24 @@
     oklch(0.3 0.09 27) 140%
   );
 }
+
+@media print {
+  header { display: none !important; }
+
+  /* Show all Radix tab panels regardless of active state */
+  [role="tabpanel"] {
+    display: block !important;
+  }
+
+  /* Page break before each tab section (except the first) */
+  [role="tabpanel"] + [role="tabpanel"] {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Force colors to print */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

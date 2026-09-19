@@ -185,6 +185,25 @@ function MatchInfoDialog({
               </SelectContent>
             </Select>
           </div>
+          {filteredChamps.length > 0 && (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Championnat</Label>
+              <Select
+                value={champSelectVal()}
+                onValueChange={(v) => set("championship_id", v === "__none__" ? null : v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Aucun —</SelectItem>
+                  {filteredChamps.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} ({c.season})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Localisation</Label>
             <Select value={val("location")} onValueChange={(v) => set("location", v)}>
@@ -230,25 +249,6 @@ function MatchInfoDialog({
               </SelectContent>
             </Select>
           </div>
-          {filteredChamps.length > 0 && (
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>Championnat</Label>
-              <Select
-                value={champSelectVal()}
-                onValueChange={(v) => set("championship_id", v === "__none__" ? null : v)}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">— Aucun —</SelectItem>
-                  {filteredChamps.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} ({c.season})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" size="sm" onClick={onClose}>Annuler</Button>

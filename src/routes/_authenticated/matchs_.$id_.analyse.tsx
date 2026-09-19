@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
@@ -260,13 +260,21 @@ function AnalysePage() {
 
   return (
     <AppShell>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2 print:hidden">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/matchs/$id" params={{ id }}>
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <p className="label-kicker">Analyse du match</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto"
+          onClick={() => window.print()}
+        >
+          <Printer className="size-4" /> Exporter PDF
+        </Button>
       </div>
       <Card className="overflow-hidden">
         <div className="pitch-gradient px-5 py-5 text-sidebar-foreground">
@@ -305,7 +313,7 @@ function AnalysePage() {
       </Card>
 
       <Tabs defaultValue="general" className="mt-6">
-        <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="flex w-full overflow-x-auto print:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="general" className="shrink-0">Général</TabsTrigger>
           <TabsTrigger value="avants" className="shrink-0">Avants</TabsTrigger>
           <TabsTrigger value="trois-quarts" className="shrink-0">3/4</TabsTrigger>
