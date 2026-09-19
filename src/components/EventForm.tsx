@@ -57,25 +57,33 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           ],
         },
       ];
-    case "touche":
-      return [
+    case "touche": {
+      const joueVite = payload?.["joue_vite"] === true;
+      const base: FieldDef[] = [
         { k: "zone", key: "zone", label: "Zone" },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
-        { k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) },
-        {
-          k: "select",
-          key: "bloc",
-          label: "Bloc (lignes soulevées)",
-          options: [
-            { value: "0", label: "0" },
-            { value: "1", label: "1" },
-            { value: "2", label: "2" },
-            { value: "3", label: "3" },
-            { value: "pb", label: "PB" },
-          ],
-        },
+        { k: "switch", key: "joue_vite", label: "Joue vite" },
       ];
+      if (!joueVite) {
+        base.push(
+          { k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) },
+          {
+            k: "select",
+            key: "bloc",
+            label: "Bloc (lignes soulevées)",
+            options: [
+              { value: "0", label: "0" },
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3" },
+              { value: "pb", label: "PB" },
+            ],
+          },
+        );
+      }
+      return base;
+    }
     case "en_avant":
       return [
         { k: "team", label: "Équipe sanctionnée" },
@@ -397,9 +405,10 @@ export function EventForm({
     setDraft((d) => ({ ...d, payload: { ...d.payload, [key]: value } }));
 
   const kickKind = type === "jeu_au_pied" ? String(draft.payload["kind"] ?? "") : "";
+  const joueVite = type === "touche" ? Boolean(draft.payload["joue_vite"]) : false;
   const fields = useMemo(
     () => fieldsFor(type, draft.payload, draft.team_side),
-    [type, kickKind, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+    [type, kickKind, joueVite, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
