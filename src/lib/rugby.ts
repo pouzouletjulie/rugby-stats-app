@@ -123,6 +123,7 @@ export const KICK_KINDS = [
   { value: "engagement", label: "Engagement" },
   { value: "chandelle", label: "Chandelle" },
   { value: "box_kick", label: "Box kick" },
+  { value: "degagement", label: "Dégagement" },
   { value: "rasant", label: "Rasant" },
   { value: "renvoi_22", label: "Renvoi aux 22" },
   { value: "renvoi_enbut", label: "Renvoi en but" },

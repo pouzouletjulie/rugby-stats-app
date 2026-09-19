@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -16,6 +17,63 @@ import {
   type MatchEvent,
   type MatchPlayer,
 } from "@/lib/rugby";
+
+const ZONE_ORDER = [
+  "Nos 5m", "Nos 22m", "Notre moitié", "Milieu de terrain", "Leur moitié", "Leurs 22m", "Leurs 5m",
+] as const;
+
+const ZONE_COLORS = [
+  "bg-sky-700", "bg-sky-500", "bg-sky-300",
+  "bg-emerald-400",
+  "bg-amber-300", "bg-orange-400", "bg-red-500",
+];
+
+function FieldZoneBar({
+  meudon,
+  adversaire,
+}: {
+  meudon: Record<string, number>;
+  adversaire: Record<string, number>;
+}) {
+  const hasData = ZONE_ORDER.some((z) => (meudon[z] ?? 0) + (adversaire[z] ?? 0) > 0);
+  if (!hasData) return <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>;
+
+  return (
+    <div className="space-y-3">
+      {(["meudon", "adversaire"] as const).map((side) => {
+        const counts = side === "meudon" ? meudon : adversaire;
+        const total = ZONE_ORDER.reduce((s, z) => s + (counts[z] ?? 0), 0);
+        if (total === 0) return null;
+        return (
+          <div key={side}>
+            <p className="mb-1 text-xs text-muted-foreground">{side === "meudon" ? "AS Meudon" : "Adversaire"} · {total}</p>
+            <div className="flex h-7 overflow-hidden rounded-md border">
+              {ZONE_ORDER.map((zone, i) => {
+                const count = counts[zone] ?? 0;
+                if (count === 0) return null;
+                const pct = (count / total) * 100;
+                return (
+                  <div
+                    key={zone}
+                    className={cn("flex items-center justify-center text-[10px] font-bold text-white", ZONE_COLORS[i])}
+                    style={{ width: `${pct}%` }}
+                    title={`${zone} : ${count}`}
+                  >
+                    {count}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+      <div className="flex justify-between text-[9px] text-muted-foreground">
+        <span>← Nos 5m</span>
+        <span>Leurs 5m →</span>
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/matchs_/$id_/analyse")({
   component: AnalysePage,
@@ -406,33 +464,7 @@ function AnalysePage() {
                 <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.keys(toucheAvants.meudon.parZone).length === 0 && Object.keys(toucheAvants.adversaire.parZone).length === 0 ? (
-                  <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs uppercase text-muted-foreground">
-                        <th className="py-1.5 text-left">Zone</th>
-                        <th className="py-1.5 text-right">Meudon</th>
-                        <th className="py-1.5 text-right">Adversaire</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {["Nos 5m", "Nos 22m", "Notre moitié", "Milieu de terrain", "Leur moitié", "Leurs 22m", "Leurs 5m"].map((zone) => {
-                        const m = toucheAvants.meudon.parZone[zone] ?? 0;
-                        const a = toucheAvants.adversaire.parZone[zone] ?? 0;
-                        if (m === 0 && a === 0) return null;
-                        return (
-                          <tr key={zone} className="border-b last:border-0">
-                            <td className="py-1.5">{zone}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{m}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{a}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
+                <FieldZoneBar meudon={toucheAvants.meudon.parZone} adversaire={toucheAvants.adversaire.parZone} />
               </CardContent>
             </Card>
 
@@ -501,33 +533,7 @@ function AnalysePage() {
                 <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.keys(meleeAvants.meudon.parZone).length === 0 && Object.keys(meleeAvants.adversaire.parZone).length === 0 ? (
-                  <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs uppercase text-muted-foreground">
-                        <th className="py-1.5 text-left">Zone</th>
-                        <th className="py-1.5 text-right">Meudon</th>
-                        <th className="py-1.5 text-right">Adversaire</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {["Nos 5m", "Nos 22m", "Notre moitié", "Milieu de terrain", "Leur moitié", "Leurs 22m", "Leurs 5m"].map((zone) => {
-                        const m = meleeAvants.meudon.parZone[zone] ?? 0;
-                        const a = meleeAvants.adversaire.parZone[zone] ?? 0;
-                        if (m === 0 && a === 0) return null;
-                        return (
-                          <tr key={zone} className="border-b last:border-0">
-                            <td className="py-1.5">{zone}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{m}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{a}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
+                <FieldZoneBar meudon={meleeAvants.meudon.parZone} adversaire={meleeAvants.adversaire.parZone} />
               </CardContent>
             </Card>
 

@@ -158,13 +158,21 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
           { k: "player" },
         ];
       }
-      if (kind === "rasant" || kind === "renvoi_22" || kind === "renvoi_enbut") {
+      if (kind === "rasant" || kind === "degagement") {
         return [
           ...base,
           { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "switch", key: "touche", label: "Sorti en touche" },
           { k: "switch", key: "cinquante_22", label: "50/22" },
+          { k: "player" },
+        ];
+      }
+      if (kind === "renvoi_22" || kind === "renvoi_enbut") {
+        return [
+          ...base,
+          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "player" },
         ];
       }
