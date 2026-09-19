@@ -271,7 +271,18 @@ function AnalysePage() {
           variant="outline"
           size="sm"
           className="ml-auto"
-          onClick={() => window.print()}
+          onClick={() => {
+            const panels = document.querySelectorAll<HTMLElement>('[role="tabpanel"]');
+            const wasHidden: boolean[] = [];
+            panels.forEach((el, i) => {
+              wasHidden[i] = el.hasAttribute("hidden");
+              el.removeAttribute("hidden");
+            });
+            window.print();
+            panels.forEach((el, i) => {
+              if (wasHidden[i]) el.setAttribute("hidden", "");
+            });
+          }}
         >
           <Printer className="size-4" /> Exporter PDF
         </Button>

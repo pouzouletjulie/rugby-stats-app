@@ -180,7 +180,8 @@
   header { display: none !important; }
 
   /* Show all Radix tab panels regardless of active state */
-  [role="tabpanel"] {
+  [role="tabpanel"],
+  [role="tabpanel"][hidden] {
     display: block !important;
   }
 
@@ -188,6 +189,7 @@
   [role="tabpanel"] + [role="tabpanel"] {
     break-before: page;
     page-break-before: always;
+    padding-top: 1rem;
   }
 
   /* Force colors to print */
