@@ -271,24 +271,7 @@ function AnalysePage() {
           variant="outline"
           size="sm"
           className="ml-auto"
-          onClick={() => {
-            const restore: (() => void)[] = [];
-            const onBefore = () => {
-              document.querySelectorAll<HTMLElement>('[role="tabpanel"]').forEach((el) => {
-                if (el.hasAttribute("hidden")) {
-                  el.removeAttribute("hidden");
-                  restore.push(() => el.setAttribute("hidden", ""));
-                }
-              });
-            };
-            const onAfter = () => {
-              restore.forEach((fn) => fn());
-              window.removeEventListener("afterprint", onAfter);
-            };
-            window.addEventListener("beforeprint", onBefore, { once: true });
-            window.addEventListener("afterprint", onAfter);
-            window.print();
-          }}
+          onClick={() => window.print()}
         >
           <Printer className="size-4" /> Exporter PDF
         </Button>
@@ -337,7 +320,7 @@ function AnalysePage() {
           <TabsTrigger value="joueurs" className="shrink-0">Stat indiv</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="mt-4 space-y-4">
+        <TabsContent forceMount value="general" className="mt-4 space-y-4">
           {/* Points détaillés */}
           <Card>
             <CardHeader>
@@ -496,7 +479,7 @@ function AnalysePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="avants" className="mt-4 space-y-6">
+        <TabsContent forceMount value="avants" className="mt-4 space-y-6">
 
           {/* ── TOUCHE ── */}
           <div className="space-y-3">
@@ -674,7 +657,7 @@ function AnalysePage() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="trois-quarts" className="mt-4 space-y-6">
+        <TabsContent forceMount value="trois-quarts" className="mt-4 space-y-6">
 
           {/* ── RÉSUMÉ ── */}
           {(() => {
@@ -786,7 +769,7 @@ function AnalysePage() {
           </div>
 
         </TabsContent>
-        <TabsContent value="joueurs" className="mt-4">
+        <TabsContent forceMount value="joueurs" className="mt-4">
           {(() => {
             const toggleIndivSort = (key: IndivSortKey) => {
               if (indivSortKey === key) setIndivSortDir((d) => (d === "asc" ? "desc" : "asc"));
