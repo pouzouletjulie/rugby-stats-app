@@ -8,6 +8,7 @@ import {
   KICK_KINDS,
   KICK_RESULTS,
   PASS_KINDS,
+  PENALTY_CHOICES,
   PENALTY_MOTIFS,
   POINT_KINDS,
   SIDES,
@@ -38,7 +39,7 @@ type FieldDef =
 
 const opts = (values: readonly string[]): Option[] => values.map((v) => ({ value: v, label: v }));
 
-export function fieldsFor(type: string, payload?: Record<string, unknown>): FieldDef[] {
+export function fieldsFor(type: string, payload?: Record<string, unknown>, teamSide?: string | null): FieldDef[] {
   switch (type) {
     case "melee":
       return [
@@ -85,8 +86,8 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
         { k: "select", key: "nature", label: "Nature", options: TURNOVER_NATURES },
         { k: "player" },
       ];
-    case "penalite":
-      return [
+    case "penalite": {
+      const fields: FieldDef[] = [
         { k: "team", label: "Équipe sanctionnée" },
         {
           k: "select",
@@ -96,6 +97,16 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
         },
         { k: "player" },
       ];
+      if (teamSide === "adversaire") {
+        fields.splice(2, 0, {
+          k: "select",
+          key: "choix",
+          label: "Notre choix",
+          options: PENALTY_CHOICES,
+        });
+      }
+      return fields;
+    }
     case "carton":
       return [
         { k: "team", label: "Équipe" },
@@ -385,7 +396,10 @@ export function EventForm({
     setDraft((d) => ({ ...d, payload: { ...d.payload, [key]: value } }));
 
   const kickKind = type === "jeu_au_pied" ? String(draft.payload["kind"] ?? "") : "";
-  const fields = useMemo(() => fieldsFor(type, draft.payload), [type, kickKind]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fields = useMemo(
+    () => fieldsFor(type, draft.payload, draft.team_side),
+    [type, kickKind, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <div className="space-y-4">

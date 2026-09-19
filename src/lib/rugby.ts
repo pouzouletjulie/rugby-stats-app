@@ -80,10 +80,16 @@ export const TOUCHE_ZONES = [
 export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant", "En-avant"] as const;
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
-  { value: "en_avant", label: "En-avant" },
   { value: "arrachage", label: "Arrachage" },
   { value: "interception", label: "Interception" },
   { value: "ballon_coffre", label: "Ballon coffré" },
+] as const;
+export const PENALTY_CHOICES = [
+  { value: "penaltouche", label: "Pénaltouche" },
+  { value: "joue_vite", label: "Joue vite" },
+  { value: "joue_main", label: "Joue à la main" },
+  { value: "melee", label: "Mêlée" },
+  { value: "autre", label: "Autre" },
 ] as const;
 export const PENALTY_MOTIFS = [
   { value: "plaquage_haut", label: "Plaquage haut" },
