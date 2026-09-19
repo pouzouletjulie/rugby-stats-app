@@ -77,7 +77,7 @@ export const TOUCHE_ZONES = [
   "Leurs 22m",
   "Leurs 5m",
 ] as const;
-export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant", "En-avant"] as const;
+export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant", "En-avant", "Pas 5m"] as const;
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
   { value: "arrachage", label: "Arrachage" },
