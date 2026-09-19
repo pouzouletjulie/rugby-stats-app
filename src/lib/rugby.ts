@@ -120,14 +120,14 @@ export const TACKLE_KINDS = [
   { value: "neutre", label: "Neutre" },
 ] as const;
 export const KICK_KINDS = [
-  { value: "cinquante_22", label: "50/22" },
-  { value: "penaltouche", label: "Pénaltouche" },
-  { value: "touche", label: "Touche" },
-  { value: "chandelle", label: "Chandelle" },
-  { value: "rasant", label: "Rasant" },
   { value: "engagement", label: "Engagement" },
+  { value: "chandelle", label: "Chandelle" },
+  { value: "box_kick", label: "Box kick" },
+  { value: "rasant", label: "Rasant" },
   { value: "renvoi_22", label: "Renvoi aux 22" },
   { value: "renvoi_enbut", label: "Renvoi en but" },
+  { value: "cinquante_22", label: "50/22" },
+  { value: "penaltouche", label: "Pénaltouche" },
 ] as const;
 export const KICK_RESULTS = [
   { value: "gain", label: "Gain de terrain" },
@@ -338,9 +338,12 @@ export function eventSummary(ev: MatchEvent): string {
       break;
     case "jeu_au_pied":
       parts.push(KICK_KINDS.find((k) => k.value === str(p["kind"]))?.label ?? str(p["kind"]));
-      parts.push(
-        KICK_RESULTS.find((r) => r.value === str(p["resultat"]))?.label ?? str(p["resultat"]),
-      );
+      if (p["zone"]) parts.push(str(p["zone"]));
+      if (p["recupere"] === true) parts.push("Récupéré");
+      if (p["gain_terrain"] === true) parts.push("Gain terrain");
+      if (p["touche"] === true) parts.push("En touche");
+      if (p["cinquante_22"] === true) parts.push("50/22");
+      if (p["moins_10m"] === true) parts.push("< 10m");
       break;
     case "entree_22":
       if (str(p["efficace"])) parts.push(str(p["efficace"]) === "oui" ? "Efficace" : "Non efficace");
@@ -563,25 +566,32 @@ export function computeStats(events: MatchEvent[]) {
       }
       case "jeu_au_pied": {
         s.jeuAuPied.total += 1;
-        const res = str(p["resultat"]);
-        if (res === "gain") s.jeuAuPied.gain += 1;
-        else if (res === "perte") s.jeuAuPied.perte += 1;
         const japKind = str(p["kind"]);
-        if (japKind === "cinquante_22") {
+        // gain : new boolean fields OR legacy resultat field
+        const isGain =
+          p["gain_terrain"] === true ||
+          p["recupere"] === true ||
+          str(p["resultat"]) === "gain";
+        const isPerte = !isGain && (
+          p["gain_terrain"] === false ||
+          str(p["resultat"]) === "perte"
+        );
+        if (isGain) s.jeuAuPied.gain += 1;
+        else if (isPerte) s.jeuAuPied.perte += 1;
+        // 50/22 from kick outcome
+        if (japKind === "cinquante_22" || p["cinquante_22"] === true) {
           s.cinquante22 += 1;
           if (pl) pl.cinquante22 += 1;
         }
         if (pl) {
           pl.jeuAuPied += 1;
-          if (res === "gain") pl.jeuAuPiedGain += 1;
-          const kind = japKind;
-          if (kind === "penaltouche") pl.japPenaltouche += 1;
-          else if (kind === "touche") pl.japTouche += 1;
-          else if (kind === "chandelle") pl.japChandelle += 1;
-          else if (kind === "rasant") pl.japRasant += 1;
-          else if (kind === "engagement") pl.japEngagement += 1;
-          else if (kind === "renvoi_22") pl.japRenvoi22 += 1;
-          else if (kind === "renvoi_enbut") pl.japRenvoiEnbut += 1;
+          if (isGain) pl.jeuAuPiedGain += 1;
+          if (japKind === "penaltouche") pl.japPenaltouche += 1;
+          else if (japKind === "chandelle" || japKind === "box_kick") pl.japChandelle += 1;
+          else if (japKind === "rasant") pl.japRasant += 1;
+          else if (japKind === "engagement") pl.japEngagement += 1;
+          else if (japKind === "renvoi_22") pl.japRenvoi22 += 1;
+          else if (japKind === "renvoi_enbut") pl.japRenvoiEnbut += 1;
         }
         break;
       }

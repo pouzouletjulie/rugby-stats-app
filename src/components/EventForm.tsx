@@ -37,7 +37,7 @@ type FieldDef =
 
 const opts = (values: readonly string[]): Option[] => values.map((v) => ({ value: v, label: v }));
 
-export function fieldsFor(type: string): FieldDef[] {
+export function fieldsFor(type: string, payload?: Record<string, unknown>): FieldDef[] {
   switch (type) {
     case "melee":
       return [
@@ -136,13 +136,40 @@ export function fieldsFor(type: string): FieldDef[] {
         { k: "select", key: "kind", label: "Type", options: TACKLE_KINDS },
         { k: "player" },
       ];
-    case "jeu_au_pied":
-      return [
+    case "jeu_au_pied": {
+      const kind = String(payload?.kind ?? "");
+      const base: FieldDef[] = [
         { k: "team", label: "Équipe" },
         { k: "select", key: "kind", label: "Type", options: KICK_KINDS },
-        { k: "select", key: "resultat", label: "Résultat", options: KICK_RESULTS },
-        { k: "player" },
       ];
+      if (kind === "engagement") {
+        return [
+          ...base,
+          { k: "switch", key: "recupere", label: "Récupéré" },
+          { k: "switch", key: "moins_10m", label: "Moins de 10m" },
+          { k: "player" },
+        ];
+      }
+      if (kind === "chandelle" || kind === "box_kick") {
+        return [
+          ...base,
+          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "switch", key: "recupere", label: "Récupéré" },
+          { k: "player" },
+        ];
+      }
+      if (kind === "rasant" || kind === "renvoi_22" || kind === "renvoi_enbut") {
+        return [
+          ...base,
+          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
+          { k: "switch", key: "touche", label: "Sorti en touche" },
+          { k: "switch", key: "cinquante_22", label: "50/22" },
+          { k: "player" },
+        ];
+      }
+      return [...base, { k: "player" }];
+    }
     default:
       return [];
   }
@@ -295,7 +322,8 @@ export function EventForm({
   const setPayload = (key: string, value: unknown) =>
     setDraft((d) => ({ ...d, payload: { ...d.payload, [key]: value } }));
 
-  const fields = useMemo(() => fieldsFor(type), [type]);
+  const kickKind = type === "jeu_au_pied" ? String(draft.payload["kind"] ?? "") : "";
+  const fields = useMemo(() => fieldsFor(type, draft.payload), [type, kickKind]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-4">
@@ -318,7 +346,13 @@ export function EventForm({
               label={f.label}
               options={f.options}
               value={String(draft.payload[f.key] ?? f.options[0]?.value ?? "")}
-              onChange={(v) => setPayload(f.key, v)}
+              onChange={(v) => {
+                if (type === "jeu_au_pied" && f.key === "kind") {
+                  setDraft((d) => ({ ...d, payload: { kind: v } }));
+                } else {
+                  setPayload(f.key, v);
+                }
+              }}
             />
           );
         }
