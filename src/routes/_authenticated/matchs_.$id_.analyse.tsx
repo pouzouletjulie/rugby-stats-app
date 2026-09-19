@@ -23,9 +23,9 @@ const ZONE_ORDER = [
 ] as const;
 
 const ZONE_COLORS = [
-  "bg-sky-700", "bg-sky-500", "bg-sky-300",
-  "bg-emerald-400",
-  "bg-amber-300", "bg-orange-400", "bg-red-500",
+  "#0369a1", "#0ea5e9", "#7dd3fc",
+  "#34d399",
+  "#fcd34d", "#f97316", "#ef4444",
 ];
 
 function FieldZoneBar({
@@ -55,8 +55,8 @@ function FieldZoneBar({
                 return (
                   <div
                     key={zone}
-                    className={cn("flex items-center justify-center text-[10px] font-bold text-white", ZONE_COLORS[i])}
-                    style={{ width: `${pct}%` }}
+                    className="flex items-center justify-center text-[10px] font-bold text-white"
+                    style={{ width: `${pct}%`, backgroundColor: ZONE_COLORS[i] }}
                     title={`${zone} : ${count}`}
                   >
                     {count}

@@ -127,8 +127,6 @@ export const KICK_KINDS = [
   { value: "rasant", label: "Rasant" },
   { value: "renvoi_22", label: "Renvoi aux 22" },
   { value: "renvoi_enbut", label: "Renvoi en but" },
-  { value: "cinquante_22", label: "50/22" },
-  { value: "penaltouche", label: "Pénaltouche" },
 ] as const;
 export const KICK_RESULTS = [
   { value: "gain", label: "Gain de terrain" },
@@ -147,7 +145,6 @@ export const EVENT_LABELS: Record<string, string> = {
   carton: "Carton",
   points: "Points",
   entree_22: "Entrée dans les 22",
-  cinquante_22: "50/22",
   passe: "Passe",
   ballon_touche: "Ballon touché",
   plaquage: "Plaquage",

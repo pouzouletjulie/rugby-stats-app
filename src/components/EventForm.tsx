@@ -120,8 +120,6 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
           ],
         },
       ];
-    case "cinquante_22":
-      return [{ k: "team", label: "Équipe" }, { k: "player" }];
     case "passe":
       return [
         { k: "team", label: "Équipe" },
@@ -158,7 +156,16 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>): Fiel
           { k: "player" },
         ];
       }
-      if (kind === "rasant" || kind === "degagement") {
+      if (kind === "rasant") {
+        return [
+          ...base,
+          { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
+          { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
+          { k: "switch", key: "touche", label: "Sorti en touche" },
+          { k: "player" },
+        ];
+      }
+      if (kind === "degagement") {
         return [
           ...base,
           { k: "select", key: "zone", label: "Zone de destination", options: opts(TOUCHE_ZONES) },
