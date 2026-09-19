@@ -55,7 +55,8 @@ function FieldZoneBar({
                     key={zone}
                     title={`${zone} : ${count}`}
                     style={{
-                      flex: 1,
+                      flex: "1 1 0%",
+                      minWidth: 0,
                       backgroundColor: count > 0 ? ZONE_COLORS[i] : "#f3f4f6",
                       display: "flex",
                       alignItems: "center",
