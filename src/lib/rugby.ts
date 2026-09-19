@@ -446,6 +446,10 @@ export type PlayerStats = {
   turnovers: number;
   penalites: number;
   cartons: number;
+  cartonsBlanc: number;
+  cartonsJaune: number;
+  cartonsBleu: number;
+  cartonsRouge: number;
   cinquante22: number;
 };
 
@@ -472,6 +476,10 @@ const emptyPlayer = (number: number): PlayerStats => ({
   turnovers: 0,
   penalites: 0,
   cartons: 0,
+  cartonsBlanc: 0,
+  cartonsJaune: 0,
+  cartonsBleu: 0,
+  cartonsRouge: 0,
   cinquante22: 0,
 });
 
@@ -555,7 +563,13 @@ export function computeStats(events: MatchEvent[]) {
       case "carton": {
         const c = str(p["couleur"]);
         if (c === "blanc" || c === "jaune" || c === "bleu" || c === "rouge") s.cartons[c] += 1;
-        if (pl) pl.cartons += 1;
+        if (pl) {
+          pl.cartons += 1;
+          if (c === "blanc") pl.cartonsBlanc += 1;
+          else if (c === "jaune") pl.cartonsJaune += 1;
+          else if (c === "bleu") pl.cartonsBleu += 1;
+          else if (c === "rouge") pl.cartonsRouge += 1;
+        }
         break;
       }
       case "entree_22":

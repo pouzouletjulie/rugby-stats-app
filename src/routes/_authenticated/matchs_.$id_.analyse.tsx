@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,8 +102,12 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id_/analyse")({
   notFoundComponent: () => <div className="p-6">Match introuvable.</div>,
 });
 
+type IndivSortKey = "name" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
+
 function AnalysePage() {
   const { id } = Route.useParams();
+  const [indivSortKey, setIndivSortKey] = useState<IndivSortKey>("name");
+  const [indivSortDir, setIndivSortDir] = useState<"asc" | "desc">("asc");
 
   const matchQ = useQuery({
     queryKey: ["match", id],
@@ -758,56 +762,79 @@ function AnalysePage() {
 
         </TabsContent>
         <TabsContent value="joueurs" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="uppercase">Bilan individuel</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              {!stats.players.length && (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  Aucun événement attribué à un joueur.
-                </p>
-              )}
-              {!!stats.players.length && (
-                <table className="w-full min-w-[46rem] text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                      <th className="py-2">Joueur</th>
-                      <th>Pts</th>
-                      <th>Essais</th>
-                      <th>Passes</th>
-                      <th>Offloads</th>
-                      <th>Ballons</th>
-                      <th>Plaq. o/d/n</th>
-                      <th>JAP (gain)</th>
-                      <th>Turn.</th>
-                      <th>Pén.</th>
-                      <th>Cart.</th>
-                      <th>50/22</th>
-                    </tr>
-                  </thead>
-                  <tbody className="tabular-nums">
-                    {stats.players.map((p) => (
-                      <tr key={p.number} className="border-b last:border-0">
-                        <td className="py-1.5 font-medium">{playerName(players, p.number)}</td>
-                        <td>{p.points}</td>
-                        <td>{p.essais}</td>
-                        <td>{p.passes}</td>
-                        <td>{p.offloads}</td>
-                        <td>{p.ballonsTouches}</td>
-                        <td>{p.plaquagesOffensifs}/{p.plaquagesDefensifs}/{p.plaquagesNeutres}</td>
-                        <td>{p.jeuAuPied} ({p.jeuAuPiedGain})</td>
-                        <td>{p.turnovers}</td>
-                        <td>{p.penalites}</td>
-                        <td>{p.cartons}</td>
-                        <td>{p.cinquante22}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </CardContent>
-          </Card>
+          {(() => {
+            const toggleIndivSort = (key: IndivSortKey) => {
+              if (indivSortKey === key) setIndivSortDir((d) => (d === "asc" ? "desc" : "asc"));
+              else { setIndivSortKey(key); setIndivSortDir(key === "name" ? "asc" : "desc"); }
+            };
+
+            const statsMap = new Map(stats.players.map((p) => [p.number, p]));
+            const rows = [...players]
+              .map((pl) => {
+                const s = statsMap.get(pl.number);
+                return {
+                  number: pl.number,
+                  name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
+                  points: s?.points ?? 0,
+                  blanc: s?.cartonsBlanc ?? 0,
+                  jaune: s?.cartonsJaune ?? 0,
+                  bleu: s?.cartonsBleu ?? 0,
+                  rouge: s?.cartonsRouge ?? 0,
+                };
+              })
+              .sort((a, b) => {
+                const dir = indivSortDir === "asc" ? 1 : -1;
+                if (indivSortKey === "name") return dir * a.name.localeCompare(b.name);
+                return dir * (a[indivSortKey] - b[indivSortKey]);
+              });
+
+            const Th = ({ k, label }: { k: IndivSortKey; label: string }) => (
+              <th
+                className="cursor-pointer select-none py-2 pr-4 text-left text-xs uppercase text-muted-foreground hover:text-foreground whitespace-nowrap"
+                onClick={() => toggleIndivSort(k)}
+              >
+                {label}{indivSortKey === k ? (indivSortDir === "asc" ? " ↑" : " ↓") : ""}
+              </th>
+            );
+
+            return (
+              <Card>
+                <CardHeader><CardTitle className="uppercase">Bilan individuel</CardTitle></CardHeader>
+                <CardContent className="overflow-x-auto">
+                  {!players.length ? (
+                    <p className="py-6 text-center text-sm text-muted-foreground">Aucun joueur dans la feuille de match.</p>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <Th k="name" label="Joueur" />
+                          <Th k="points" label="Pts" />
+                          <Th k="blanc" label="Blanc" />
+                          <Th k="jaune" label="Jaune" />
+                          <Th k="bleu" label="Bleu" />
+                          <Th k="rouge" label="Rouge" />
+                        </tr>
+                      </thead>
+                      <tbody className="tabular-nums">
+                        {rows.map((r) => (
+                          <tr key={r.number} className="border-b last:border-0">
+                            <td className="py-1.5 font-medium">
+                              <span className="mr-1.5 text-xs text-muted-foreground">n°{r.number}</span>{r.name}
+                            </td>
+                            <td className="pr-4">{r.points || "—"}</td>
+                            <td className="pr-4">{r.blanc || "—"}</td>
+                            <td className="pr-4">{r.jaune || "—"}</td>
+                            <td className="pr-4">{r.bleu || "—"}</td>
+                            <td className="pr-4">{r.rouge || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </AppShell>
