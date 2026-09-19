@@ -96,6 +96,7 @@ export const PENALTY_MOTIFS = [
   { value: "plaquage_haut", label: "Plaquage haut" },
   { value: "plaquage_a_deux", label: "Plaquage à deux" },
   { value: "plaquage_air", label: "Plaquage en l'air" },
+  { value: "balle_gardee_sol", label: "Balle gardée au sol" },
   { value: "melee", label: "Mêlée" },
   { value: "hors_jeu", label: "Hors-jeu" },
   { value: "perte_appui", label: "Perte d'appui" },
