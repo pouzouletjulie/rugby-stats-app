@@ -336,11 +336,7 @@ function AnalysePage() {
                         ? `${stats.sides.meudon.transformations}/${stats.sides.meudon.transformationsTentees} (${pct(stats.sides.meudon.transformations, stats.sides.meudon.transformationsTentees)})`
                         : stats.sides.meudon.transformations}
                     </td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.adversaire.transformationsTentees > 0
-                        ? `${stats.sides.adversaire.transformations}/${stats.sides.adversaire.transformationsTentees} (${pct(stats.sides.adversaire.transformations, stats.sides.adversaire.transformationsTentees)})`
-                        : stats.sides.adversaire.transformations}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Pénalités au but <span className="text-xs text-muted-foreground">(×3)</span></td>
@@ -349,11 +345,7 @@ function AnalysePage() {
                         ? `${stats.sides.meudon.penalitesBut}/${stats.sides.meudon.penalitesButTentees} (${pct(stats.sides.meudon.penalitesBut, stats.sides.meudon.penalitesButTentees)})`
                         : stats.sides.meudon.penalitesBut}
                     </td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.adversaire.penalitesButTentees > 0
-                        ? `${stats.sides.adversaire.penalitesBut}/${stats.sides.adversaire.penalitesButTentees} (${pct(stats.sides.adversaire.penalitesBut, stats.sides.adversaire.penalitesButTentees)})`
-                        : stats.sides.adversaire.penalitesBut}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
@@ -362,11 +354,7 @@ function AnalysePage() {
                         ? `${stats.sides.meudon.drops}/${stats.sides.meudon.dropsTentes} (${pct(stats.sides.meudon.drops, stats.sides.meudon.dropsTentes)})`
                         : stats.sides.meudon.drops}
                     </td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.adversaire.dropsTentes > 0
-                        ? `${stats.sides.adversaire.drops}/${stats.sides.adversaire.dropsTentes} (${pct(stats.sides.adversaire.drops, stats.sides.adversaire.dropsTentes)})`
-                        : stats.sides.adversaire.drops}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.adversaire.drops}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Essais de pénalité <span className="text-xs text-muted-foreground">(×7)</span></td>
