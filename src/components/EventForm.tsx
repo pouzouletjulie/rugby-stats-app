@@ -41,12 +41,15 @@ const opts = (values: readonly string[]): Option[] => values.map((v) => ({ value
 
 export function fieldsFor(type: string, payload?: Record<string, unknown>, teamSide?: string | null): FieldDef[] {
   switch (type) {
-    case "melee":
-      return [
+    case "melee": {
+      const possession = String(payload?.["possession"] ?? "meudon");
+      const fields: FieldDef[] = [
         { k: "zone", key: "zone", label: "Zone" },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
-        {
+      ];
+      if (possession === "meudon") {
+        fields.push({
           k: "select",
           key: "sortie",
           label: "Sortie",
@@ -55,8 +58,10 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
             { value: "9", label: "Sortie du 9" },
             { value: "bras_casse", label: "Bras cassé (pénalité)" },
           ],
-        },
-      ];
+        });
+      }
+      return fields;
+    }
     case "touche": {
       const joueVite = payload?.["joue_vite"] === true;
       const possession = String(payload?.["possession"] ?? "meudon");
@@ -198,12 +203,8 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
         { k: "player" },
       ];
     case "jeu_au_pied": {
-      if (teamSide !== "meudon") {
-        return [{ k: "team", label: "Équipe" }, { k: "player" }];
-      }
       const kind = String(payload?.kind ?? "");
       const base: FieldDef[] = [
-        { k: "team", label: "Équipe" },
         { k: "select", key: "kind", label: "Type", options: KICK_KINDS },
       ];
       if (kind === "engagement") {
@@ -458,11 +459,12 @@ export function EventForm({
   const joueVite = type === "touche" ? Boolean(draft.payload["joue_vite"]) : false;
   const touchePossession = type === "touche" ? String(draft.payload["possession"] ?? "meudon") : "";
   const toucheGain = type === "touche" ? String(draft.payload["gain"] ?? "meudon") : "";
+  const meleePossession = type === "melee" ? String(draft.payload["possession"] ?? "meudon") : "";
   const degagementTouche = kickKind === "degagement" ? Boolean(draft.payload["touche"]) : false;
   const penaltyChoix = type === "penalite" ? String(draft.payload["choix"] ?? "") : "";
   const fields = useMemo(
     () => fieldsFor(type, draft.payload, draft.team_side),
-    [type, kickKind, pointsKind, joueVite, touchePossession, toucheGain, degagementTouche, penaltyChoix, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+    [type, kickKind, pointsKind, joueVite, touchePossession, toucheGain, meleePossession, degagementTouche, penaltyChoix, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
