@@ -175,6 +175,9 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
         { k: "player" },
       ];
     case "jeu_au_pied": {
+      if (teamSide !== "meudon") {
+        return [{ k: "team", label: "Équipe" }, { k: "player" }];
+      }
       const kind = String(payload?.kind ?? "");
       const base: FieldDef[] = [
         { k: "team", label: "Équipe" },
