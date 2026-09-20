@@ -65,8 +65,12 @@ function MatchesPage() {
       if (error) throw error;
       const scores = new Map<string, { meudon: number; adversaire: number }>();
       for (const ev of points ?? []) {
-        const kind = (ev.payload as { kind?: string } | null)?.kind ?? "";
-        const value = POINT_KINDS.find((k) => k.value === kind)?.points ?? 0;
+        const p = ev.payload as Record<string, unknown> | null;
+        const kind = String(p?.kind ?? "");
+        const reussi = p?.reussi;
+        const isKick = kind === "transformation" || kind === "penalite_but" || kind === "drop";
+        const base = POINT_KINDS.find((k) => k.value === kind)?.points ?? 0;
+        const value = isKick && reussi === false ? 0 : base;
         const entry = scores.get(ev.match_id) ?? { meudon: 0, adversaire: 0 };
         if (ev.team_side === "adversaire") entry.adversaire += value;
         else entry.meudon += value;
