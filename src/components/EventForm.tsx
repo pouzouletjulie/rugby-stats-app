@@ -113,6 +113,13 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           label: "Notre choix",
           options: PENALTY_CHOICES,
         });
+        if (payload?.["choix"] === "penaltouche") {
+          fields.splice(4, 0, {
+            k: "switch",
+            key: "penaltouche_trouvee",
+            label: "Pénaltouche trouvée",
+          });
+        }
       }
       return fields;
     }
@@ -417,9 +424,10 @@ export function EventForm({
   const pointsKind = type === "points" ? String(draft.payload["kind"] ?? "") : "";
   const joueVite = type === "touche" ? Boolean(draft.payload["joue_vite"]) : false;
   const degagementTouche = kickKind === "degagement" ? Boolean(draft.payload["touche"]) : false;
+  const penaltyChoix = type === "penalite" ? String(draft.payload["choix"] ?? "") : "";
   const fields = useMemo(
     () => fieldsFor(type, draft.payload, draft.team_side),
-    [type, kickKind, pointsKind, joueVite, degagementTouche, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
+    [type, kickKind, pointsKind, joueVite, degagementTouche, penaltyChoix, draft.team_side], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
