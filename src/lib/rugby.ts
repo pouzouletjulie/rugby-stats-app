@@ -91,6 +91,7 @@ export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
   { value: "arrachage", label: "Arrachage" },
+  { value: "contre_ruck", label: "Contre ruck" },
   { value: "interception", label: "Interception" },
   { value: "ballon_coffre", label: "Ballon coffré" },
 ] as const;
