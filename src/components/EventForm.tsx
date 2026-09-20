@@ -118,7 +118,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           options: PENALTY_CHOICES,
         });
         if (payload?.["choix"] === "penaltouche") {
-          fields.splice(4, 0, {
+          fields.splice(3, 0, {
             k: "switch",
             key: "penaltouche_trouvee",
             label: "Pénaltouche trouvée",
