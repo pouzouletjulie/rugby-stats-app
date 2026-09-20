@@ -177,7 +177,6 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
     }
     case "entree_22":
       return [
-        { k: "team", label: "Équipe qui entre dans les 22" },
         {
           k: "select",
           key: "efficace",
