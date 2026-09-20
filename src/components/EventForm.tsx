@@ -172,7 +172,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           ],
         });
       }
-      fields.push({ k: "player" });
+      if (teamSide === "meudon") fields.push({ k: "player" });
       return fields;
     }
     case "entree_22":
