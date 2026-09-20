@@ -216,7 +216,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           { k: "player" },
         ];
       }
-      if (kind === "chandelle" || kind === "box_kick") {
+      if (kind === "chandelle" || kind === "box_kick" || kind === "par_dessus") {
         return [
           ...base,
           { k: "zone", key: "zone", label: "Zone de destination" },
