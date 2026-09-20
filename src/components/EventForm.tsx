@@ -139,11 +139,34 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
     case "points": {
       const pointsKind = String(payload?.["kind"] ?? "essai");
       const isKick = pointsKind === "transformation" || pointsKind === "penalite_but" || pointsKind === "drop";
+      const isPositioned = pointsKind === "transformation" || pointsKind === "penalite_but";
       const fields: FieldDef[] = [
         { k: "team", label: "Équipe" },
         { k: "select", key: "kind", label: "Type", options: POINT_KINDS },
       ];
       if (isKick) fields.push({ k: "switch", key: "reussi", label: "Réussi" });
+      if (isPositioned) {
+        fields.push({
+          k: "select",
+          key: "position_cote",
+          label: "Côté",
+          options: [
+            { value: "gauche", label: "Gauche terrain" },
+            { value: "milieu", label: "Milieu terrain" },
+            { value: "droite", label: "Droite terrain" },
+          ],
+        });
+        fields.push({
+          k: "select",
+          key: "position_distance",
+          label: "Distance",
+          options: [
+            { value: "22m", label: "22m" },
+            { value: "40m", label: "40m" },
+            { value: "50m", label: "50m" },
+          ],
+        });
+      }
       fields.push({ k: "player" });
       return fields;
     }
