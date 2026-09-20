@@ -144,7 +144,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
     case "points": {
       const pointsKind = String(payload?.["kind"] ?? "essai");
       const isKick = pointsKind === "transformation" || pointsKind === "penalite_but" || pointsKind === "drop";
-      const isPositioned = pointsKind === "transformation" || pointsKind === "penalite_but";
+      const isPositioned = (pointsKind === "transformation" || pointsKind === "penalite_but") && teamSide === "meudon";
       const fields: FieldDef[] = [
         { k: "team", label: "Équipe" },
         { k: "select", key: "kind", label: "Type", options: POINT_KINDS },
