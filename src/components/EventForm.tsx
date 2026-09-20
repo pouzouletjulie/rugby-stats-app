@@ -102,6 +102,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
     case "penalite": {
       const fields: FieldDef[] = [
         { k: "team", label: "Équipe sanctionnée" },
+        { k: "zone", key: "zone", label: "Zone" },
         { k: "player" },
       ];
       if (teamSide === "meudon") {
