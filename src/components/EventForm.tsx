@@ -94,10 +94,9 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
       return base;
     }
     case "en_avant":
-      return [
-        { k: "team", label: "Équipe sanctionnée" },
-        { k: "player" },
-      ];
+      return teamSide === "meudon"
+        ? [{ k: "team", label: "Équipe sanctionnée" }, { k: "player" }]
+        : [{ k: "team", label: "Équipe sanctionnée" }];
     case "turnover":
       return [
         { k: "team", label: "Équipe bénéficiaire" },
@@ -143,7 +142,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
       ];
     case "points": {
       const pointsKind = String(payload?.["kind"] ?? "essai");
-      const isKick = pointsKind === "transformation" || pointsKind === "penalite_but" || pointsKind === "drop";
+      const isKick = (pointsKind === "transformation" || pointsKind === "penalite_but" || pointsKind === "drop") && teamSide === "meudon";
       const isPositioned = (pointsKind === "transformation" || pointsKind === "penalite_but") && teamSide === "meudon";
       const fields: FieldDef[] = [
         { k: "team", label: "Équipe" },
