@@ -102,14 +102,16 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
     case "penalite": {
       const fields: FieldDef[] = [
         { k: "team", label: "Équipe sanctionnée" },
-        {
+        { k: "player" },
+      ];
+      if (teamSide === "meudon") {
+        fields.splice(1, 0, {
           k: "select",
           key: "motif",
           label: "Motif",
           options: PENALTY_MOTIFS.filter((m) => m.value !== "melee"),
-        },
-        { k: "player" },
-      ];
+        });
+      }
       if (teamSide === "adversaire") {
         fields.splice(2, 0, {
           k: "select",
