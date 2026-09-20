@@ -211,6 +211,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           ...base,
           { k: "switch", key: "recupere", label: "Récupéré" },
           { k: "switch", key: "moins_10m", label: "Moins de 10m" },
+          { k: "switch", key: "direct_touche", label: "Direct en touche" },
           { k: "switch", key: "plaquage_immediat", label: "Plaquage immédiat" },
           { k: "player" },
         ];
