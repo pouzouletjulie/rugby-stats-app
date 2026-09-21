@@ -474,7 +474,7 @@ function AnalysePage() {
         </section>
 
         <section className="analyse-section space-y-6">
-          <h2 className="text-xl font-bold uppercase tracking-wide">Avants</h2>
+          <h2 className="text-xl font-bold uppercase tracking-wide">Conquête</h2>
 
           {/* ── TOUCHE ── */}
           <div className="space-y-3">
@@ -654,7 +654,7 @@ function AnalysePage() {
         </section>
 
         <section className="analyse-section space-y-6">
-          <h2 className="text-xl font-bold uppercase tracking-wide">3/4 — Jeu au pied</h2>
+          <h2 className="text-xl font-bold uppercase tracking-wide">Jeu au pied</h2>
 
           {/* ── ENGAGEMENT ── */}
           <div className="space-y-3">
@@ -746,7 +746,7 @@ function AnalysePage() {
         </section>
 
         <section className="analyse-section">
-          <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Statistiques individuelles</h2>
+          <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Stats indiv</h2>
           {(() => {
             const toggleIndivSort = (key: IndivSortKey) => {
               if (indivSortKey === key) setIndivSortDir((d) => (d === "asc" ? "desc" : "asc"));
