@@ -240,6 +240,25 @@ function AnalysePage() {
     return r;
   }, [events]);
 
+  const generalParPeriode = useMemo(() => {
+    const r = {
+      meudon: { enAvants: { mt1: 0, mt2: 0 }, penalites: { mt1: 0, mt2: 0 } },
+      adversaire: { enAvants: { mt1: 0, mt2: 0 }, penalites: { mt1: 0, mt2: 0 } },
+    };
+    for (const e of events) {
+      if (e.deleted_at) continue;
+      const side = e.team_side === "adversaire" ? "adversaire" : "meudon";
+      if (e.event_type === "en_avant") {
+        if (e.period === "mt1") r[side].enAvants.mt1 += 1;
+        else if (e.period === "mt2") r[side].enAvants.mt2 += 1;
+      } else if (e.event_type === "penalite") {
+        if (e.period === "mt1") r[side].penalites.mt1 += 1;
+        else if (e.period === "mt2") r[side].penalites.mt2 += 1;
+      }
+    }
+    return r;
+  }, [events]);
+
   const pct = (n: number, total: number) =>
     total === 0 ? "—" : `${Math.round((n / total) * 100)} %`;
 
@@ -341,29 +360,17 @@ function AnalysePage() {
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Transformations <span className="text-xs text-muted-foreground">(×2)</span></td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.meudon.transformationsTentees > 0
-                        ? `${stats.sides.meudon.transformations}/${stats.sides.meudon.transformationsTentees}`
-                        : stats.sides.meudon.transformations}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.meudon.transformations}</td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Pénalités au but <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.meudon.penalitesButTentees > 0
-                        ? `${stats.sides.meudon.penalitesBut}/${stats.sides.meudon.penalitesButTentees}`
-                        : stats.sides.meudon.penalitesBut}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.meudon.penalitesBut}</td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.meudon.dropsTentes > 0
-                        ? `${stats.sides.meudon.drops}/${stats.sides.meudon.dropsTentes}`
-                        : stats.sides.meudon.drops}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.meudon.drops}</td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.drops}</td>
                   </tr>
                   <tr className="border-b">
@@ -409,18 +416,30 @@ function AnalysePage() {
               <CardHeader className="pb-1">
                 <CardTitle className="text-xs uppercase text-muted-foreground">En-avants</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-0.5 text-sm">
-                <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
-                <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
+              <CardContent className="space-y-1.5 text-sm">
+                <div>
+                  <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
+                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.enAvants.mt1} · 2e MT : {generalParPeriode.meudon.enAvants.mt2}</p>
+                </div>
+                <div>
+                  <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
+                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.enAvants.mt1} · 2e MT : {generalParPeriode.adversaire.enAvants.mt2}</p>
+                </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-xs uppercase text-muted-foreground">Pénalités concédées</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-0.5 text-sm">
-                <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.penalitesConcedees}</span></p>
-                <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.penalitesConcedees}</span></p>
+              <CardContent className="space-y-1.5 text-sm">
+                <div>
+                  <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.penalitesConcedees}</span></p>
+                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.penalites.mt1} · 2e MT : {generalParPeriode.meudon.penalites.mt2}</p>
+                </div>
+                <div>
+                  <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.penalitesConcedees}</span></p>
+                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.penalites.mt1} · 2e MT : {generalParPeriode.adversaire.penalites.mt2}</p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -498,8 +517,7 @@ function AnalysePage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-2xl font-bold tabular-nums">{t.total}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">1re MT : {t.parPeriode.mt1} · 2e MT : {t.parPeriode.mt2}</p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         Perdues : {perdues}{t.total > 0 ? ` (${Math.round(perdues / t.total * 100)} %)` : ""}
                       </p>
                     </CardContent>
@@ -601,8 +619,7 @@ function AnalysePage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-2xl font-bold tabular-nums">{m.total}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">1re MT : {m.parPeriode.mt1} · 2e MT : {m.parPeriode.mt2}</p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         Perdues : {perdues}{m.total > 0 ? ` (${Math.round(perdues / m.total * 100)} %)` : ""}
                       </p>
                     </CardContent>
