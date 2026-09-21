@@ -250,6 +250,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
         return [
           ...base,
           { k: "zone", key: "zone", label: "Zone de destination" },
+          { k: "switch", key: "recupere", label: "Récupéré" },
           { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "player" },
         ];

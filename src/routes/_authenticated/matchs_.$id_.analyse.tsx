@@ -160,6 +160,17 @@ function AnalysePage() {
       .sort((a, b) => b.count - a.count);
   }, [events]);
 
+  const penaltoucheStats = useMemo(() => {
+    let tentees = 0, trouvees = 0;
+    for (const e of events) {
+      if (e.deleted_at || e.event_type !== "penalite" || e.team_side !== "adversaire") continue;
+      if (String(e.payload?.["choix"] ?? "") !== "penaltouche") continue;
+      tentees += 1;
+      if (e.payload?.["penaltouche_trouvee"] === true) trouvees += 1;
+    }
+    return { tentees, trouvees };
+  }, [events]);
+
   const toucheAvants = useMemo(() => {
     const r = {
       meudon: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parSuite: {} as Record<string, number>, parZone: {} as Record<string, number>, parPeriode: { mt1: 0, mt2: 0 } },
@@ -210,6 +221,8 @@ function AnalysePage() {
       degagement: { total: 0, touche: 0, toucheDirecte: 0, gainTerrain: 0, parZone: {} as Record<string, number> },
       chandelle: { total: 0, recupere: 0, parZone: {} as Record<string, number> },
       rasantRenvoi: { total: 0, gainTerrain: 0 },
+      pressionKick: { total: 0, recupere: 0, recupereBase: 0, gainTerrain: 0, gainTerrainBase: 0, parZone: {} as Record<string, number> },
+      renvoi: { total: 0, recupere: 0, gainTerrain: 0 },
     };
     for (const e of events) {
       if (e.deleted_at || e.event_type !== "jeu_au_pied" || e.team_side !== "meudon") continue;
@@ -240,6 +253,23 @@ function AnalysePage() {
       } else if (kind === "rasant" || kind === "renvoi_22" || kind === "renvoi_enbut") {
         r.rasantRenvoi.total += 1;
         if (p["gain_terrain"] === true) r.rasantRenvoi.gainTerrain += 1;
+        if (kind === "renvoi_22" || kind === "renvoi_enbut") {
+          r.renvoi.total += 1;
+          if (p["recupere"] === true) r.renvoi.recupere += 1;
+          if (p["gain_terrain"] === true) r.renvoi.gainTerrain += 1;
+        }
+      }
+      if (["chandelle", "box_kick", "par_dessus", "rasant", "renvoi_22", "renvoi_enbut"].includes(kind)) {
+        r.pressionKick.total += 1;
+        const zone = String(p["zone"] ?? "");
+        if (zone) r.pressionKick.parZone[zone] = (r.pressionKick.parZone[zone] ?? 0) + 1;
+        if (["chandelle", "box_kick", "par_dessus"].includes(kind)) {
+          r.pressionKick.recupereBase += 1;
+          if (p["recupere"] === true) r.pressionKick.recupere += 1;
+        } else {
+          r.pressionKick.gainTerrainBase += 1;
+          if (p["gain_terrain"] === true) r.pressionKick.gainTerrain += 1;
+        }
       }
     }
     return r;
@@ -489,6 +519,12 @@ function AnalysePage() {
                   <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.penalitesConcedees}</span></p>
                   <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.penalites.mt1} · 2e MT : {generalParPeriode.adversaire.penalites.mt2}</p>
                 </div>
+                {penaltoucheStats.tentees > 0 && (
+                  <div className="border-t pt-1.5">
+                    <p className="text-xs text-muted-foreground">Pénaltouches trouvées</p>
+                    <p className="font-semibold tabular-nums">{penaltoucheStats.trouvees}/{penaltoucheStats.tentees} <span className="text-xs font-normal text-muted-foreground">({pct(penaltoucheStats.trouvees, penaltoucheStats.tentees)})</span></p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -756,70 +792,97 @@ function AnalysePage() {
           {/* ── DÉGAGEMENT ── */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Dégagement — AS Meudon</h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: "Dégagements", value: japTroisQuarts.degagement.total },
-                { label: "Gain de terrain", value: `${japTroisQuarts.degagement.gainTerrain} (${pct(japTroisQuarts.degagement.gainTerrain, japTroisQuarts.degagement.total)})` },
-                { label: "En touche", value: `${japTroisQuarts.degagement.touche} (${pct(japTroisQuarts.degagement.touche, japTroisQuarts.degagement.total)})` },
-                { label: "Touche directe", value: japTroisQuarts.degagement.touche > 0 ? `${japTroisQuarts.degagement.toucheDirecte} (${pct(japTroisQuarts.degagement.toucheDirecte, japTroisQuarts.degagement.touche)})` : "—" },
-              ].map(({ label, value }) => (
-                <Card key={label}>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-xl font-bold tabular-nums">{value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-2xl font-bold tabular-nums">{japTroisQuarts.degagement.total}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Total</p>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
               <CardContent>
                 <FieldZoneBar meudon={japTroisQuarts.degagement.parZone} adversaire={{}} />
               </CardContent>
             </Card>
-          </div>
-
-          {/* ── CHANDELLE / BOX KICK ── */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Chandelle / Box kick — AS Meudon</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Total", value: japTroisQuarts.chandelle.total },
-                { label: "Récupérés", value: `${japTroisQuarts.chandelle.recupere} (${pct(japTroisQuarts.chandelle.recupere, japTroisQuarts.chandelle.total)})` },
-              ].map(({ label, value }) => (
-                <Card key={label}>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-2xl font-bold tabular-nums">{value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
             <Card>
-              <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
-              <CardContent>
-                <FieldZoneBar meudon={japTroisQuarts.chandelle.parZone} adversaire={{}} />
+              <CardContent className="pt-4">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1.5">En touche</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.touche}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Direct en touche</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.toucheDirecte}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5">Gain de terrain</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.degagement.gainTerrain, japTroisQuarts.degagement.total)}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
           </div>
 
-          {/* ── RASANT / RENVOI ── */}
+          {/* ── CHANDELLE / BOX KICK ── */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Rasant / Renvoi — AS Meudon</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Total", value: japTroisQuarts.rasantRenvoi.total },
-                { label: "Gain de terrain", value: `${japTroisQuarts.rasantRenvoi.gainTerrain} (${pct(japTroisQuarts.rasantRenvoi.gainTerrain, japTroisQuarts.rasantRenvoi.total)})` },
-              ].map(({ label, value }) => (
-                <Card key={label}>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-2xl font-bold tabular-nums">{value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Jeu au pied de pression — AS Meudon</h3>
+            <Card>
+              <CardContent className="pt-4">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1.5">Volume</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.pressionKick.total}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Récupéré</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.pressionKick.recupere, japTroisQuarts.pressionKick.recupereBase)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5">Gain de terrain</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.pressionKick.gainTerrain, japTroisQuarts.pressionKick.gainTerrainBase)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
+              <CardContent>
+                <FieldZoneBar meudon={japTroisQuarts.pressionKick.parZone} adversaire={{}} />
+              </CardContent>
+            </Card>
           </div>
+
+          {/* ── RENVOI ── */}
+          {japTroisQuarts.renvoi.total > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Renvoi — AS Meudon</h3>
+              <Card>
+                <CardContent className="pt-4">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-1.5">Volume</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.renvoi.total}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-1.5">Récupéré</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.renvoi.recupere, japTroisQuarts.renvoi.total)}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1.5">Gain de terrain</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.renvoi.gainTerrain, japTroisQuarts.renvoi.total)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* ── PÉNALITÉ AU BUT ── */}
           {(() => {
@@ -923,6 +986,7 @@ function AnalysePage() {
                   rouge: s?.cartonsRouge ?? 0,
                 };
               })
+              .filter((r) => r.points > 0 || r.blanc > 0 || r.jaune > 0 || r.bleu > 0 || r.rouge > 0)
               .sort((a, b) => {
                 const dir = indivSortDir === "asc" ? 1 : -1;
                 if (indivSortKey === "name") return dir * a.name.localeCompare(b.name);
