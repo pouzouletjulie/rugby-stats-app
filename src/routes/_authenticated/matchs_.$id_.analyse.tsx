@@ -12,6 +12,7 @@ import {
   PENALTY_MOTIFS,
   computeStats,
   playerName,
+  pointsValue,
   teamLabel,
   type MatchEvent,
   type MatchPlayer,
@@ -240,6 +241,35 @@ function AnalysePage() {
     return r;
   }, [events]);
 
+  const kickStats = useMemo(() => {
+    type Cell = { tentees: number; reussies: number };
+    const makeGrid = (): Record<string, Record<string, Cell>> =>
+      Object.fromEntries(
+        ["22m", "40m", "50m"].map((d) => [
+          d,
+          Object.fromEntries(
+            ["gauche", "milieu", "droite"].map((c) => [c, { tentees: 0, reussies: 0 }])
+          ),
+        ])
+      );
+    const r = { penalite_but: makeGrid(), transformation: makeGrid() };
+    for (const e of events) {
+      if (e.deleted_at || e.event_type !== "points" || e.team_side !== "meudon") continue;
+      const p = e.payload as Record<string, unknown>;
+      const kind = String(p?.["kind"] ?? "");
+      if (kind !== "penalite_but" && kind !== "transformation") continue;
+      const distance = String(p?.["position_distance"] ?? "");
+      const cote = String(p?.["position_cote"] ?? "");
+      if (!distance || !cote) continue;
+      const grid = r[kind as "penalite_but" | "transformation"];
+      if (grid[distance]?.[cote]) {
+        grid[distance][cote].tentees += 1;
+        if (p?.["reussi"] !== false) grid[distance][cote].reussies += 1;
+      }
+    }
+    return r;
+  }, [events]);
+
   const generalParPeriode = useMemo(() => {
     const r = {
       meudon: { enAvants: { mt1: 0, mt2: 0 }, penalites: { mt1: 0, mt2: 0 } },
@@ -255,6 +285,18 @@ function AnalysePage() {
         if (e.period === "mt1") r[side].penalites.mt1 += 1;
         else if (e.period === "mt2") r[side].penalites.mt2 += 1;
       }
+    }
+    return r;
+  }, [events]);
+
+  const scoreMiTemps = useMemo(() => {
+    const r = { meudon: 0, adversaire: 0 };
+    for (const e of events) {
+      if (e.deleted_at || e.period !== "mt1") continue;
+      const pts = pointsValue(e);
+      if (pts === 0) continue;
+      const side = e.team_side === "adversaire" ? "adversaire" : "meudon";
+      r[side] += pts;
     }
     return r;
   }, [events]);
@@ -331,6 +373,9 @@ function AnalysePage() {
               </div>
             </div>
           </div>
+          <p className="mt-2 text-xs text-sidebar-foreground/60">
+            Mi-temps : {scoreMiTemps.meudon} – {scoreMiTemps.adversaire}
+          </p>
         </div>
       </Card>
 
@@ -762,6 +807,104 @@ function AnalysePage() {
               ))}
             </div>
           </div>
+
+          {/* ── PÉNALITÉ AU BUT ── */}
+          {(() => {
+            const grid = kickStats.penalite_but;
+            const distances = ["22m", "40m", "50m"] as const;
+            const cotes = ["gauche", "milieu", "droite"] as const;
+            const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
+            const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
+            if (!hasData) return null;
+            const colTotal = (c: string) => distances.reduce((s, d) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
+            const rowTotal = (d: string) => cotes.reduce((s, c) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
+            const grandTotal = distances.reduce((s, d) => { const t = rowTotal(d); return { tentees: s.tentees + t.tentees, reussies: s.reussies + t.reussies }; }, { tentees: 0, reussies: 0 });
+            const cellFmt = (cell: { tentees: number; reussies: number }) =>
+              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} (${Math.round(cell.reussies / cell.tentees * 100)} %)`;
+            return (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité au but — AS Meudon</h3>
+                <Card>
+                  <CardContent className="pt-4 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-xs uppercase text-muted-foreground">
+                          <th className="py-1.5 text-left"></th>
+                          {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
+                          <th className="py-1.5 text-right font-bold">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {distances.map((d) => (
+                          <tr key={d} className="border-b last:border-0">
+                            <td className="py-1.5 font-medium">{d}</td>
+                            {cotes.map((c) => (
+                              <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
+                            ))}
+                            <td className="py-1.5 text-right tabular-nums font-semibold">{cellFmt(rowTotal(d))}</td>
+                          </tr>
+                        ))}
+                        <tr className="border-t font-bold">
+                          <td className="py-1.5">Total</td>
+                          {cotes.map((c) => <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(colTotal(c))}</td>)}
+                          <td className="py-1.5 text-right tabular-nums">{cellFmt(grandTotal)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })()}
+
+          {/* ── TRANSFORMATION ── */}
+          {(() => {
+            const grid = kickStats.transformation;
+            const distances = ["22m", "40m", "50m"] as const;
+            const cotes = ["gauche", "milieu", "droite"] as const;
+            const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
+            const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
+            if (!hasData) return null;
+            const colTotal = (c: string) => distances.reduce((s, d) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
+            const rowTotal = (d: string) => cotes.reduce((s, c) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
+            const grandTotal = distances.reduce((s, d) => { const t = rowTotal(d); return { tentees: s.tentees + t.tentees, reussies: s.reussies + t.reussies }; }, { tentees: 0, reussies: 0 });
+            const cellFmt = (cell: { tentees: number; reussies: number }) =>
+              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} (${Math.round(cell.reussies / cell.tentees * 100)} %)`;
+            return (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Transformation — AS Meudon</h3>
+                <Card>
+                  <CardContent className="pt-4 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-xs uppercase text-muted-foreground">
+                          <th className="py-1.5 text-left"></th>
+                          {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
+                          <th className="py-1.5 text-right font-bold">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {distances.map((d) => (
+                          <tr key={d} className="border-b last:border-0">
+                            <td className="py-1.5 font-medium">{d}</td>
+                            {cotes.map((c) => (
+                              <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
+                            ))}
+                            <td className="py-1.5 text-right tabular-nums font-semibold">{cellFmt(rowTotal(d))}</td>
+                          </tr>
+                        ))}
+                        <tr className="border-t font-bold">
+                          <td className="py-1.5">Total</td>
+                          {cotes.map((c) => <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(colTotal(c))}</td>)}
+                          <td className="py-1.5 text-right tabular-nums">{cellFmt(grandTotal)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })()}
 
         </section>
 
