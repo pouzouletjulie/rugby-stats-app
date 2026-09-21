@@ -891,7 +891,7 @@ function AnalysePage() {
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
             const hasPositionData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
-              cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
+              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité — AS Meudon</h3>
@@ -939,7 +939,7 @@ function AnalysePage() {
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
             const hasPositionData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
-              cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
+              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Transformation — AS Meudon</h3>
