@@ -161,8 +161,8 @@ function AnalysePage() {
 
   const toucheAvants = useMemo(() => {
     const r = {
-      meudon: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parSuite: {} as Record<string, number>, parZone: {} as Record<string, number> },
-      adversaire: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parZone: {} as Record<string, number> },
+      meudon: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parSuite: {} as Record<string, number>, parZone: {} as Record<string, number>, parPeriode: { mt1: 0, mt2: 0 } },
+      adversaire: { total: 0, gagnees: 0, parBloc: {} as Record<string, number>, parZone: {} as Record<string, number>, parPeriode: { mt1: 0, mt2: 0 } },
     };
     for (const e of events) {
       if (e.deleted_at || e.event_type !== "touche") continue;
@@ -176,14 +176,16 @@ function AnalysePage() {
       r[pos].parBloc[bloc] = (r[pos].parBloc[bloc] ?? 0) + 1;
       if (zone) r[pos].parZone[zone] = (r[pos].parZone[zone] ?? 0) + 1;
       if (pos === "meudon" && suite) r.meudon.parSuite[suite] = (r.meudon.parSuite[suite] ?? 0) + 1;
+      if (e.period === "mt1") r[pos].parPeriode.mt1 += 1;
+      else if (e.period === "mt2") r[pos].parPeriode.mt2 += 1;
     }
     return r;
   }, [events]);
 
   const meleeAvants = useMemo(() => {
     const r = {
-      meudon: { total: 0, gagnees: 0, parSortie: {} as Record<string, number>, parZone: {} as Record<string, number> },
-      adversaire: { total: 0, gagnees: 0, parZone: {} as Record<string, number> },
+      meudon: { total: 0, gagnees: 0, parSortie: {} as Record<string, number>, parZone: {} as Record<string, number>, parPeriode: { mt1: 0, mt2: 0 } },
+      adversaire: { total: 0, gagnees: 0, parZone: {} as Record<string, number>, parPeriode: { mt1: 0, mt2: 0 } },
     };
     for (const e of events) {
       if (e.deleted_at || e.event_type !== "melee") continue;
@@ -195,6 +197,8 @@ function AnalysePage() {
       if (gain === pos) r[pos].gagnees += 1;
       if (zone) r[pos].parZone[zone] = (r[pos].parZone[zone] ?? 0) + 1;
       if (pos === "meudon" && sortie) r.meudon.parSortie[sortie] = (r.meudon.parSortie[sortie] ?? 0) + 1;
+      if (e.period === "mt1") r[pos].parPeriode.mt1 += 1;
+      else if (e.period === "mt2") r[pos].parPeriode.mt2 += 1;
     }
     return r;
   }, [events]);
@@ -339,7 +343,7 @@ function AnalysePage() {
                     <td className="py-1.5">Transformations <span className="text-xs text-muted-foreground">(×2)</span></td>
                     <td className="py-1.5 text-right">
                       {stats.sides.meudon.transformationsTentees > 0
-                        ? `${stats.sides.meudon.transformations}/${stats.sides.meudon.transformationsTentees} (${pct(stats.sides.meudon.transformations, stats.sides.meudon.transformationsTentees)})`
+                        ? `${stats.sides.meudon.transformations}/${stats.sides.meudon.transformationsTentees}`
                         : stats.sides.meudon.transformations}
                     </td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
@@ -348,7 +352,7 @@ function AnalysePage() {
                     <td className="py-1.5">Pénalités au but <span className="text-xs text-muted-foreground">(×3)</span></td>
                     <td className="py-1.5 text-right">
                       {stats.sides.meudon.penalitesButTentees > 0
-                        ? `${stats.sides.meudon.penalitesBut}/${stats.sides.meudon.penalitesButTentees} (${pct(stats.sides.meudon.penalitesBut, stats.sides.meudon.penalitesButTentees)})`
+                        ? `${stats.sides.meudon.penalitesBut}/${stats.sides.meudon.penalitesButTentees}`
                         : stats.sides.meudon.penalitesBut}
                     </td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
@@ -357,7 +361,7 @@ function AnalysePage() {
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
                     <td className="py-1.5 text-right">
                       {stats.sides.meudon.dropsTentes > 0
-                        ? `${stats.sides.meudon.drops}/${stats.sides.meudon.dropsTentes} (${pct(stats.sides.meudon.drops, stats.sides.meudon.dropsTentes)})`
+                        ? `${stats.sides.meudon.drops}/${stats.sides.meudon.dropsTentes}`
                         : stats.sides.meudon.drops}
                     </td>
                     <td className="py-1.5 text-right">{stats.sides.adversaire.drops}</td>
@@ -494,7 +498,8 @@ function AnalysePage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-2xl font-bold tabular-nums">{t.total}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground">1re MT : {t.parPeriode.mt1} · 2e MT : {t.parPeriode.mt2}</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
                         Perdues : {perdues}{t.total > 0 ? ` (${Math.round(perdues / t.total * 100)} %)` : ""}
                       </p>
                     </CardContent>
@@ -503,33 +508,30 @@ function AnalysePage() {
               })}
             </div>
 
-            {/* Par bloc — les deux équipes dans un seul tableau */}
+            {/* Par bloc — AS Meudon uniquement */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm uppercase">Par bloc</CardTitle>
+                <CardTitle className="text-sm uppercase">Par bloc — AS Meudon</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.keys(toucheAvants.meudon.parBloc).length === 0 && Object.keys(toucheAvants.adversaire.parBloc).length === 0 ? (
+                {Object.keys(toucheAvants.meudon.parBloc).length === 0 ? (
                   <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
                 ) : (
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b text-xs uppercase text-muted-foreground">
                         <th className="py-1.5 text-left">Bloc</th>
-                        <th className="py-1.5 text-right">Meudon</th>
-                        <th className="py-1.5 text-right">Adversaire</th>
+                        <th className="py-1.5 text-right">Nb</th>
                       </tr>
                     </thead>
                     <tbody>
                       {["0", "1", "2", "3"].map((k) => {
                         const m = toucheAvants.meudon.parBloc[k] ?? 0;
-                        const a = toucheAvants.adversaire.parBloc[k] ?? 0;
-                        if (m === 0 && a === 0) return null;
+                        if (m === 0) return null;
                         return (
                           <tr key={k} className="border-b last:border-0">
                             <td className="py-1.5">{blocLabel(k)}</td>
                             <td className="py-1.5 text-right tabular-nums font-medium">{m}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{a}</td>
                           </tr>
                         );
                       })}
@@ -599,7 +601,8 @@ function AnalysePage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-2xl font-bold tabular-nums">{m.total}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground">1re MT : {m.parPeriode.mt1} · 2e MT : {m.parPeriode.mt2}</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
                         Perdues : {perdues}{m.total > 0 ? ` (${Math.round(perdues / m.total * 100)} %)` : ""}
                       </p>
                     </CardContent>
