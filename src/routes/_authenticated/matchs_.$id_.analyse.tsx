@@ -8,7 +8,6 @@ import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PENALTY_MOTIFS,
   computeStats,
@@ -312,16 +311,10 @@ function AnalysePage() {
         </div>
       </Card>
 
-      <Tabs defaultValue="general" className="mt-6">
-        <TabsList className="flex w-full overflow-x-auto print:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="general" className="shrink-0">Général</TabsTrigger>
-          <TabsTrigger value="avants" className="shrink-0">Avants</TabsTrigger>
-          <TabsTrigger value="trois-quarts" className="shrink-0">3/4</TabsTrigger>
-          <TabsTrigger value="joueurs" className="shrink-0">Stat indiv</TabsTrigger>
-        </TabsList>
+      <div className="mt-6 space-y-10">
 
-        <TabsContent forceMount value="general" className="mt-4 space-y-4">
-          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">Général</h2>
+        <section className="analyse-section space-y-4">
+          <h2 className="text-xl font-bold uppercase tracking-wide">Général</h2>
           {/* Points détaillés */}
           <Card>
             <CardHeader>
@@ -478,10 +471,10 @@ function AnalysePage() {
               </p>
             </CardContent>
           </Card>
-        </TabsContent>
+        </section>
 
-        <TabsContent forceMount value="avants" className="mt-4 space-y-6">
-          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">Avants</h2>
+        <section className="analyse-section space-y-6">
+          <h2 className="text-xl font-bold uppercase tracking-wide">Avants</h2>
 
           {/* ── TOUCHE ── */}
           <div className="space-y-3">
@@ -658,9 +651,10 @@ function AnalysePage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-        <TabsContent forceMount value="trois-quarts" className="mt-4 space-y-6">
-          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide">3/4 — Jeu au pied</h2>
+        </section>
+
+        <section className="analyse-section space-y-6">
+          <h2 className="text-xl font-bold uppercase tracking-wide">3/4 — Jeu au pied</h2>
 
           {/* ── ENGAGEMENT ── */}
           <div className="space-y-3">
@@ -749,9 +743,10 @@ function AnalysePage() {
             </div>
           </div>
 
-        </TabsContent>
-        <TabsContent forceMount value="joueurs" className="mt-4">
-          <h2 className="hidden print:block text-xl font-bold uppercase tracking-wide mb-4">Statistiques individuelles</h2>
+        </section>
+
+        <section className="analyse-section">
+          <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Statistiques individuelles</h2>
           {(() => {
             const toggleIndivSort = (key: IndivSortKey) => {
               if (indivSortKey === key) setIndivSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -825,8 +820,8 @@ function AnalysePage() {
               </Card>
             );
           })()}
-        </TabsContent>
-      </Tabs>
+        </section>
+      </div>
     </AppShell>
   );
 }

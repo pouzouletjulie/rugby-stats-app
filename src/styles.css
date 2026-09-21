@@ -179,14 +179,8 @@
 @media print {
   header { display: none !important; }
 
-  /* Show all Radix tab panels regardless of active state */
-  [role="tabpanel"],
-  [role="tabpanel"][hidden] {
-    display: block !important;
-  }
-
-  /* Page break before each tab section (except the first) */
-  [role="tabpanel"] + [role="tabpanel"] {
+  /* Page break between analyse sections */
+  .analyse-section + .analyse-section {
     break-before: page;
     page-break-before: always;
     padding-top: 1rem;
