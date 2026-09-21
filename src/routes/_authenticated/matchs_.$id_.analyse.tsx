@@ -816,11 +816,8 @@ function AnalysePage() {
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
             const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             if (!hasData) return null;
-            const colTotal = (c: string) => distances.reduce((s, d) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
-            const rowTotal = (d: string) => cotes.reduce((s, c) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
-            const grandTotal = distances.reduce((s, d) => { const t = rowTotal(d); return { tentees: s.tentees + t.tentees, reussies: s.reussies + t.reussies }; }, { tentees: 0, reussies: 0 });
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
-              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} (${Math.round(cell.reussies / cell.tentees * 100)} %)`;
+              cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité au but — AS Meudon</h3>
@@ -831,7 +828,6 @@ function AnalysePage() {
                         <tr className="border-b text-xs uppercase text-muted-foreground">
                           <th className="py-1.5 text-left"></th>
                           {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
-                          <th className="py-1.5 text-right font-bold">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -841,14 +837,8 @@ function AnalysePage() {
                             {cotes.map((c) => (
                               <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
                             ))}
-                            <td className="py-1.5 text-right tabular-nums font-semibold">{cellFmt(rowTotal(d))}</td>
                           </tr>
                         ))}
-                        <tr className="border-t font-bold">
-                          <td className="py-1.5">Total</td>
-                          {cotes.map((c) => <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(colTotal(c))}</td>)}
-                          <td className="py-1.5 text-right tabular-nums">{cellFmt(grandTotal)}</td>
-                        </tr>
                       </tbody>
                     </table>
                   </CardContent>
@@ -865,11 +855,8 @@ function AnalysePage() {
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
             const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             if (!hasData) return null;
-            const colTotal = (c: string) => distances.reduce((s, d) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
-            const rowTotal = (d: string) => cotes.reduce((s, c) => ({ tentees: s.tentees + grid[d][c].tentees, reussies: s.reussies + grid[d][c].reussies }), { tentees: 0, reussies: 0 });
-            const grandTotal = distances.reduce((s, d) => { const t = rowTotal(d); return { tentees: s.tentees + t.tentees, reussies: s.reussies + t.reussies }; }, { tentees: 0, reussies: 0 });
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
-              cell.tentees === 0 ? "—" : `${cell.reussies}/${cell.tentees} (${Math.round(cell.reussies / cell.tentees * 100)} %)`;
+              cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Transformation — AS Meudon</h3>
@@ -880,7 +867,6 @@ function AnalysePage() {
                         <tr className="border-b text-xs uppercase text-muted-foreground">
                           <th className="py-1.5 text-left"></th>
                           {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
-                          <th className="py-1.5 text-right font-bold">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -890,14 +876,8 @@ function AnalysePage() {
                             {cotes.map((c) => (
                               <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
                             ))}
-                            <td className="py-1.5 text-right tabular-nums font-semibold">{cellFmt(rowTotal(d))}</td>
                           </tr>
                         ))}
-                        <tr className="border-t font-bold">
-                          <td className="py-1.5">Total</td>
-                          {cotes.map((c) => <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(colTotal(c))}</td>)}
-                          <td className="py-1.5 text-right tabular-nums">{cellFmt(grandTotal)}</td>
-                        </tr>
                       </tbody>
                     </table>
                   </CardContent>
