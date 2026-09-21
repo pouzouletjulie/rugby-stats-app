@@ -524,6 +524,13 @@ export function EventForm({
                       ...(isPositioned && d.team_side === "meudon" ? { position_cote: "gauche", position_distance: "22m" } : {}),
                     },
                   }));
+                } else if ((type === "touche" || type === "melee") && f.key === "gain" && v !== "meudon") {
+                  setDraft((d) => {
+                    const next = { ...d.payload, gain: v };
+                    delete next["suite"];
+                    delete next["sortie"];
+                    return { ...d, payload: next };
+                  });
                 } else {
                   setPayload(f.key, v);
                 }

@@ -187,7 +187,7 @@ function AnalysePage() {
       if (gain === pos) r[pos].gagnees += 1;
       r[pos].parBloc[bloc] = (r[pos].parBloc[bloc] ?? 0) + 1;
       if (zone) r[pos].parZone[zone] = (r[pos].parZone[zone] ?? 0) + 1;
-      if (pos === "meudon" && suite) r.meudon.parSuite[suite] = (r.meudon.parSuite[suite] ?? 0) + 1;
+      if (pos === "meudon" && gain === "meudon" && suite) r.meudon.parSuite[suite] = (r.meudon.parSuite[suite] ?? 0) + 1;
       if (e.period === "mt1") r[pos].parPeriode.mt1 += 1;
       else if (e.period === "mt2") r[pos].parPeriode.mt2 += 1;
     }
@@ -208,7 +208,7 @@ function AnalysePage() {
       r[pos].total += 1;
       if (gain === pos) r[pos].gagnees += 1;
       if (zone) r[pos].parZone[zone] = (r[pos].parZone[zone] ?? 0) + 1;
-      if (pos === "meudon" && sortie) r.meudon.parSortie[sortie] = (r.meudon.parSortie[sortie] ?? 0) + 1;
+      if (pos === "meudon" && gain === "meudon" && sortie) r.meudon.parSortie[sortie] = (r.meudon.parSortie[sortie] ?? 0) + 1;
       if (e.period === "mt1") r[pos].parPeriode.mt1 += 1;
       else if (e.period === "mt2") r[pos].parPeriode.mt2 += 1;
     }
@@ -438,33 +438,13 @@ function AnalysePage() {
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Transformations <span className="text-xs text-muted-foreground">(×2)</span></td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.meudon.transformations}
-                      {stats.sides.meudon.transformationsTentees > 0 && (
-                        <span className="text-xs text-muted-foreground">/{stats.sides.meudon.transformationsTentees}</span>
-                      )}
-                    </td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.adversaire.transformations}
-                      {stats.sides.adversaire.transformationsTentees > 0 && (
-                        <span className="text-xs text-muted-foreground">/{stats.sides.adversaire.transformationsTentees}</span>
-                      )}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.meudon.transformations}</td>
+                    <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Pénalités <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.meudon.penalitesBut}
-                      {stats.sides.meudon.penalitesButTentees > 0 && (
-                        <span className="text-xs text-muted-foreground">/{stats.sides.meudon.penalitesButTentees}</span>
-                      )}
-                    </td>
-                    <td className="py-1.5 text-right">
-                      {stats.sides.adversaire.penalitesBut}
-                      {stats.sides.adversaire.penalitesButTentees > 0 && (
-                        <span className="text-xs text-muted-foreground">/{stats.sides.adversaire.penalitesButTentees}</span>
-                      )}
-                    </td>
+                    <td className="py-1.5 text-right">{stats.sides.meudon.penalitesBut}</td>
+                    <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
