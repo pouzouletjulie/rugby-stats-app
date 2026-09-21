@@ -206,7 +206,7 @@ function AnalysePage() {
 
   const japTroisQuarts = useMemo(() => {
     const r = {
-      engagement: { total: 0, recupere: 0, moins10m: 0 },
+      engagement: { total: 0, recupere: 0, plaquageImmédiat: 0, moins10m: 0, directTouche: 0, autre: 0 },
       degagement: { total: 0, touche: 0, toucheDirecte: 0, gainTerrain: 0, parZone: {} as Record<string, number> },
       chandelle: { total: 0, recupere: 0, parZone: {} as Record<string, number> },
       rasantRenvoi: { total: 0, gainTerrain: 0 },
@@ -217,8 +217,12 @@ function AnalysePage() {
       const kind = String(p?.["kind"] ?? "");
       if (kind === "engagement") {
         r.engagement.total += 1;
+        const flags = [p["recupere"], p["plaquage_immediat"], p["moins_10m"], p["direct_touche"]];
         if (p["recupere"] === true) r.engagement.recupere += 1;
-        if (p["moins_10m"] === true) r.engagement.moins10m += 1;
+        else if (p["plaquage_immediat"] === true) r.engagement.plaquageImmédiat += 1;
+        else if (p["moins_10m"] === true) r.engagement.moins10m += 1;
+        else if (p["direct_touche"] === true) r.engagement.directTouche += 1;
+        else if (!flags.some((f) => f === true)) r.engagement.autre += 1;
       } else if (kind === "degagement") {
         r.degagement.total += 1;
         if (p["touche"] === true) {
@@ -724,20 +728,29 @@ function AnalysePage() {
           {/* ── ENGAGEMENT ── */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Engagement — AS Meudon</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Engagements", value: japTroisQuarts.engagement.total },
-                { label: "Récupérés", value: `${japTroisQuarts.engagement.recupere} (${pct(japTroisQuarts.engagement.recupere, japTroisQuarts.engagement.total)})` },
-                { label: "Moins de 10m", value: japTroisQuarts.engagement.moins10m },
-              ].map(({ label, value }) => (
-                <Card key={label}>
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-2xl font-bold tabular-nums">{value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="pt-4">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {[
+                      { label: "Récupéré", value: japTroisQuarts.engagement.recupere },
+                      { label: "Plaquage immédiat", value: japTroisQuarts.engagement.plaquageImmédiat },
+                      { label: "Moins de 10m", value: japTroisQuarts.engagement.moins10m },
+                      { label: "Direct en touche", value: japTroisQuarts.engagement.directTouche },
+                      { label: "Autre", value: japTroisQuarts.engagement.autre },
+                    ].filter(({ value }) => value > 0).map(({ label, value }) => (
+                      <tr key={label} className="border-b last:border-0">
+                        <td className="py-1.5">{label}</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{value}</td>
+                      </tr>
+                    ))}
+                    {japTroisQuarts.engagement.total === 0 && (
+                      <tr><td colSpan={2} className="py-2 text-muted-foreground">Aucune donnée</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
           </div>
 
           {/* ── DÉGAGEMENT ── */}
