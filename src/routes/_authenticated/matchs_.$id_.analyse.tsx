@@ -884,79 +884,97 @@ function AnalysePage() {
           )}
 
           {/* ── PÉNALITÉ AU BUT ── */}
-          {(() => {
+          {stats.sides.meudon.penalitesButTentees > 0 && (() => {
             const grid = kickStats.penalite_but;
             const distances = ["22m", "40m", "50m"] as const;
             const cotes = ["gauche", "milieu", "droite"] as const;
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
-            const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
-            if (!hasData) return null;
+            const hasPositionData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
               cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité — AS Meudon</h3>
                 <Card>
-                  <CardContent className="pt-4 overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-xs uppercase text-muted-foreground">
-                          <th className="py-1.5 text-left"></th>
-                          {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {distances.map((d) => (
-                          <tr key={d} className="border-b last:border-0">
-                            <td className="py-1.5 font-medium">{d}</td>
-                            {cotes.map((c) => (
-                              <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold tabular-nums">
+                      {stats.sides.meudon.penalitesBut}<span className="text-base text-muted-foreground">/{stats.sides.meudon.penalitesButTentees}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{pct(stats.sides.meudon.penalitesBut, stats.sides.meudon.penalitesButTentees)} de réussite</p>
                   </CardContent>
                 </Card>
+                {hasPositionData && (
+                  <Card>
+                    <CardContent className="pt-4 overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left"></th>
+                            {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {distances.map((d) => (
+                            <tr key={d} className="border-b last:border-0">
+                              <td className="py-1.5 font-medium">{d}</td>
+                              {cotes.map((c) => (
+                                <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             );
           })()}
 
           {/* ── TRANSFORMATION ── */}
-          {(() => {
+          {stats.sides.meudon.transformationsTentees > 0 && (() => {
             const grid = kickStats.transformation;
             const distances = ["22m", "40m", "50m"] as const;
             const cotes = ["gauche", "milieu", "droite"] as const;
             const coteLabel = { gauche: "Gauche", milieu: "Milieu", droite: "Droite" };
-            const hasData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
-            if (!hasData) return null;
+            const hasPositionData = distances.some((d) => cotes.some((c) => grid[d][c].tentees > 0));
             const cellFmt = (cell: { tentees: number; reussies: number }) =>
               cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Transformation — AS Meudon</h3>
                 <Card>
-                  <CardContent className="pt-4 overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-xs uppercase text-muted-foreground">
-                          <th className="py-1.5 text-left"></th>
-                          {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {distances.map((d) => (
-                          <tr key={d} className="border-b last:border-0">
-                            <td className="py-1.5 font-medium">{d}</td>
-                            {cotes.map((c) => (
-                              <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold tabular-nums">
+                      {stats.sides.meudon.transformations}<span className="text-base text-muted-foreground">/{stats.sides.meudon.transformationsTentees}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{pct(stats.sides.meudon.transformations, stats.sides.meudon.transformationsTentees)} de réussite</p>
                   </CardContent>
                 </Card>
+                {hasPositionData && (
+                  <Card>
+                    <CardContent className="pt-4 overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left"></th>
+                            {cotes.map((c) => <th key={c} className="py-1.5 text-right">{coteLabel[c]}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {distances.map((d) => (
+                            <tr key={d} className="border-b last:border-0">
+                              <td className="py-1.5 font-medium">{d}</td>
+                              {cotes.map((c) => (
+                                <td key={c} className="py-1.5 text-right tabular-nums">{cellFmt(grid[d][c])}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             );
           })()}
