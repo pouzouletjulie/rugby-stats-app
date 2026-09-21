@@ -42,13 +42,14 @@ const opts = (values: readonly string[]): Option[] => values.map((v) => ({ value
 export function fieldsFor(type: string, payload?: Record<string, unknown>, teamSide?: string | null): FieldDef[] {
   switch (type) {
     case "melee": {
+      const possession = String(payload?.["possession"] ?? "meudon");
       const gain = String(payload?.["gain"] ?? "meudon");
       const fields: FieldDef[] = [
         { k: "zone", key: "zone", label: "Zone" },
         { k: "select", key: "possession", label: "Possession", options: SIDES },
         { k: "select", key: "gain", label: "Gain", options: SIDES },
       ];
-      if (gain === "meudon") {
+      if (possession === "meudon" && gain === "meudon") {
         fields.push({
           k: "select",
           key: "sortie",
@@ -87,7 +88,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
             ],
           });
         }
-        if (gain === "meudon") {
+        if (possession === "meudon" && gain === "meudon") {
           base.push({ k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) });
         }
       }
@@ -220,6 +221,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           ...base,
           { k: "zone", key: "zone", label: "Zone de destination" },
           { k: "switch", key: "recupere", label: "Récupéré" },
+          { k: "switch", key: "gain_terrain", label: "Gain de terrain" },
           { k: "player" },
         ];
       }
@@ -264,7 +266,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
 
 export function defaultDraft(type: string, playerNumber: number | null = null): EventDraft {
   const payload: Record<string, unknown> = {};
-  for (const f of fieldsFor(type)) {
+  for (const f of fieldsFor(type, payload, "meudon")) {
     if (f.k === "select") payload[f.key] = f.options[0]?.value ?? "";
     if (f.k === "zone") payload[f.key] = TOUCHE_ZONES[3]; // milieu de terrain par défaut
     if (f.k === "switch") payload[f.key] = false;
@@ -478,7 +480,16 @@ export function EventForm({
               label={f.label ?? "Équipe"}
               options={SIDES}
               value={draft.team_side ?? "meudon"}
-              onChange={(v) => setDraft((d) => ({ ...d, team_side: v }))}
+              onChange={(v) => setDraft((d) => {
+                const nextPayload = { ...d.payload };
+                const newFields = fieldsFor(type, nextPayload, v);
+                for (const nf of newFields) {
+                  if (nf.k === "select" && !(nf.key in nextPayload)) {
+                    nextPayload[nf.key] = nf.options[0]?.value ?? "";
+                  }
+                }
+                return { ...d, team_side: v, payload: nextPayload };
+              })}
             />
           );
         }
@@ -504,7 +515,15 @@ export function EventForm({
                   setDraft((d) => ({ ...d, payload: { kind: v } }));
                 } else if (type === "points" && f.key === "kind") {
                   const isKick = v === "transformation" || v === "penalite_but" || v === "drop";
-                  setDraft((d) => ({ ...d, payload: { kind: v, ...(isKick ? { reussi: true } : {}) } }));
+                  const isPositioned = v === "transformation" || v === "penalite_but";
+                  setDraft((d) => ({
+                    ...d,
+                    payload: {
+                      kind: v,
+                      ...(isKick ? { reussi: true } : {}),
+                      ...(isPositioned && d.team_side === "meudon" ? { position_cote: "gauche", position_distance: "22m" } : {}),
+                    },
+                  }));
                 } else {
                   setPayload(f.key, v);
                 }

@@ -266,10 +266,9 @@ function AnalysePage() {
         if (["chandelle", "box_kick", "par_dessus"].includes(kind)) {
           r.pressionKick.recupereBase += 1;
           if (p["recupere"] === true) r.pressionKick.recupere += 1;
-        } else {
-          r.pressionKick.gainTerrainBase += 1;
-          if (p["gain_terrain"] === true) r.pressionKick.gainTerrain += 1;
         }
+        r.pressionKick.gainTerrainBase += 1;
+        if (p["gain_terrain"] === true) r.pressionKick.gainTerrain += 1;
       }
     }
     return r;
@@ -439,13 +438,33 @@ function AnalysePage() {
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Transformations <span className="text-xs text-muted-foreground">(×2)</span></td>
-                    <td className="py-1.5 text-right">{stats.sides.meudon.transformations}</td>
-                    <td className="py-1.5 text-right">{stats.sides.adversaire.transformations}</td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.meudon.transformations}
+                      {stats.sides.meudon.transformationsTentees > 0 && (
+                        <span className="text-xs text-muted-foreground">/{stats.sides.meudon.transformationsTentees}</span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.adversaire.transformations}
+                      {stats.sides.adversaire.transformationsTentees > 0 && (
+                        <span className="text-xs text-muted-foreground">/{stats.sides.adversaire.transformationsTentees}</span>
+                      )}
+                    </td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5">Pénalités au but <span className="text-xs text-muted-foreground">(×3)</span></td>
-                    <td className="py-1.5 text-right">{stats.sides.meudon.penalitesBut}</td>
-                    <td className="py-1.5 text-right">{stats.sides.adversaire.penalitesBut}</td>
+                    <td className="py-1.5">Pénalités <span className="text-xs text-muted-foreground">(×3)</span></td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.meudon.penalitesBut}
+                      {stats.sides.meudon.penalitesButTentees > 0 && (
+                        <span className="text-xs text-muted-foreground">/{stats.sides.meudon.penalitesButTentees}</span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {stats.sides.adversaire.penalitesBut}
+                      {stats.sides.adversaire.penalitesButTentees > 0 && (
+                        <span className="text-xs text-muted-foreground">/{stats.sides.adversaire.penalitesButTentees}</span>
+                      )}
+                    </td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5">Drops <span className="text-xs text-muted-foreground">(×3)</span></td>
@@ -896,7 +915,7 @@ function AnalysePage() {
               cell.tentees === 0 ? "—" : `${cell.tentees} · ${Math.round(cell.reussies / cell.tentees * 100)} %`;
             return (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité au but — AS Meudon</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalité — AS Meudon</h3>
                 <Card>
                   <CardContent className="pt-4 overflow-x-auto">
                     <table className="w-full text-sm">
