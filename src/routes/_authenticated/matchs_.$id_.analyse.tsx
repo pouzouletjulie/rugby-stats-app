@@ -339,9 +339,9 @@ function AnalysePage() {
     total === 0 ? "—" : `${Math.round((n / total) * 100)} %`;
 
   const blocLabel = (k: string) => {
-    if (k === "true") return "Avec bloc";
-    if (k === "false" || k === "0" || k === "") return "Sans bloc";
-    return `${k} bloc${k !== "1" ? "s" : ""}`;
+    if (k === "true") return "Bloc 1";
+    if (k === "false" || k === "" ) return "Bloc 0";
+    return `Bloc ${k}`;
   };
 
   const meudonPts = stats.sides.meudon.points;
