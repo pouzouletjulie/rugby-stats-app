@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   PENALTY_MOTIFS,
+  TURNOVER_NATURES,
   computeStats,
   playerName,
   pointsValue,
