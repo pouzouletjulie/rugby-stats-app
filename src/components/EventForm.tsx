@@ -264,7 +264,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
   }
 }
 
-const POSITION_KEYS = new Set(["position_cote", "position_distance"]);
+const POSITION_KEYS = new Set(["position_cote", "position_distance", "motif"]);
 
 export function defaultDraft(type: string, playerNumber: number | null = null): EventDraft {
   const payload: Record<string, unknown> = {};
