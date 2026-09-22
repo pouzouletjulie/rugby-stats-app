@@ -264,10 +264,12 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
   }
 }
 
+const POSITION_KEYS = new Set(["position_cote", "position_distance"]);
+
 export function defaultDraft(type: string, playerNumber: number | null = null): EventDraft {
   const payload: Record<string, unknown> = {};
   for (const f of fieldsFor(type, payload, "meudon")) {
-    if (f.k === "select") payload[f.key] = f.options[0]?.value ?? "";
+    if (f.k === "select" && !POSITION_KEYS.has(f.key)) payload[f.key] = f.options[0]?.value ?? "";
     if (f.k === "zone") payload[f.key] = TOUCHE_ZONES[3]; // milieu de terrain par défaut
     if (f.k === "switch") payload[f.key] = false;
   }
@@ -509,19 +511,17 @@ export function EventForm({
               key={i}
               label={f.label}
               options={f.options}
-              value={String(draft.payload[f.key] ?? f.options[0]?.value ?? "")}
+              value={String(draft.payload[f.key] ?? (POSITION_KEYS.has(f.key) ? "" : f.options[0]?.value ?? ""))}
               onChange={(v) => {
                 if (type === "jeu_au_pied" && f.key === "kind") {
                   setDraft((d) => ({ ...d, payload: { kind: v } }));
                 } else if (type === "points" && f.key === "kind") {
                   const isKick = v === "transformation" || v === "penalite_but" || v === "drop";
-                  const isPositioned = v === "transformation" || v === "penalite_but";
                   setDraft((d) => ({
                     ...d,
                     payload: {
                       kind: v,
                       ...(isKick ? { reussi: true } : {}),
-                      ...(isPositioned && d.team_side === "meudon" ? { position_cote: "gauche", position_distance: "22m" } : {}),
                     },
                   }));
                 } else if ((type === "touche" || type === "melee") && f.key === "gain" && v !== "meudon") {

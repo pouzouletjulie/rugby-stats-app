@@ -150,30 +150,35 @@ function AnalysePage() {
   const events = eventsQ.data ?? [];
   const stats = useMemo(() => computeStats(events), [events]);
   const penaltyBreakdown = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const byMotif: Record<string, number> = {};
+    const parZone: Record<string, number> = {};
     for (const e of events) {
       if (e.deleted_at || e.event_type !== "penalite" || e.team_side !== "meudon") continue;
       const motif = String(e.payload?.["motif"] ?? "autre");
-      counts[motif] = (counts[motif] ?? 0) + 1;
+      byMotif[motif] = (byMotif[motif] ?? 0) + 1;
+      const zone = String(e.payload?.["zone"] ?? "");
+      if (zone) parZone[zone] = (parZone[zone] ?? 0) + 1;
     }
-    return Object.entries(counts)
-      .map(([motif, count]) => ({ motif, count }))
-      .sort((a, b) => b.count - a.count);
+    return {
+      byMotif: Object.entries(byMotif).map(([motif, count]) => ({ motif, count })).sort((a, b) => b.count - a.count),
+      parZone,
+    };
   }, [events]);
 
   const turnoverBreakdown = useMemo(() => {
     const byNature: Record<string, number> = {};
     const byPlayer: Record<string, number> = {};
     for (const e of events) {
-      if (e.deleted_at || e.team_side !== "meudon") continue;
-      if (e.event_type !== "turnover" && e.event_type !== "en_avant") continue;
-      const nature =
-        e.event_type === "en_avant"
-          ? "En-avant"
-          : (TURNOVER_NATURES.find((n) => n.value === String(e.payload?.["nature"] ?? ""))?.label ??
-             String(e.payload?.["nature"] ?? "autre"));
+      if (e.deleted_at) continue;
+      const isEnAvantAdv = e.event_type === "en_avant" && e.team_side === "adversaire";
+      const isTurnoverMeudon = e.event_type === "turnover" && e.team_side === "meudon";
+      if (!isEnAvantAdv && !isTurnoverMeudon) continue;
+      const nature = isEnAvantAdv
+        ? "En-avant"
+        : (TURNOVER_NATURES.find((n) => n.value === String(e.payload?.["nature"] ?? ""))?.label ??
+           String(e.payload?.["nature"] ?? "autre"));
       byNature[nature] = (byNature[nature] ?? 0) + 1;
-      if (e.player_number) {
+      if (isTurnoverMeudon && e.player_number) {
         const name = playerName(players, e.player_number) ?? `n°${e.player_number}`;
         byPlayer[name] = (byPlayer[name] ?? 0) + 1;
       }
@@ -625,38 +630,47 @@ function AnalysePage() {
             </div>
           )}
 
-          {/* Motifs pénalités */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm uppercase">Motifs des pénalités AS Meudon</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {penaltyBreakdown.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  Aucune pénalité enregistrée
-                </p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                      <th className="py-2">Motif</th>
-                      <th className="py-2 text-right">Nb</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {penaltyBreakdown.map(({ motif, count }) => (
-                      <tr key={motif} className="border-b last:border-0">
-                        <td className="py-1.5">
-                          {PENALTY_MOTIFS.find((m) => m.value === motif)?.label ?? motif}
-                        </td>
-                        <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Pénalités concédées — détail */}
+          {penaltyBreakdown.byMotif.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pénalités concédées — AS Meudon</h3>
+              {Object.keys(penaltyBreakdown.parZone).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FieldZoneBar meudon={penaltyBreakdown.parZone} adversaire={{}} />
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm uppercase">Par motif</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                        <th className="py-2">Motif</th>
+                        <th className="py-2 text-right">Nb</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {penaltyBreakdown.byMotif.map(({ motif, count }) => (
+                        <tr key={motif} className="border-b last:border-0">
+                          <td className="py-1.5">
+                            {PENALTY_MOTIFS.find((m) => m.value === motif)?.label ?? motif}
+                          </td>
+                          <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Entrées 22 Meudon uniquement */}
           <Card>
