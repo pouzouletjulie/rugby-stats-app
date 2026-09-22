@@ -797,7 +797,7 @@ function AnalysePage() {
           </div>
 
           {/* ── MÊLÉE ── */}
-          <div className="space-y-3">
+          <div className="space-y-3 print-break-before">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Mêlée</h3>
 
             {/* Totaux */}
@@ -1008,7 +1008,7 @@ function AnalysePage() {
           </div>
 
           {/* ── DÉGAGEMENT ── */}
-          <div className="space-y-3">
+          <div className="space-y-3 print-break-before">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Dégagement — AS Meudon</h3>
             <Card>
               <CardContent className="pt-4">
