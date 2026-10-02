@@ -116,6 +116,7 @@ export const PENALTY_MOTIFS = [
   { value: "perte_appui", label: "Perte d'appui" },
   { value: "plaqueur_ruck", label: "Plaqueur dans le ruck" },
   { value: "plaqueur_lache_pas", label: "Plaqueur qui ne lâche pas" },
+  { value: "ecroule_maul", label: "Écroule le maul" },
   { value: "en_avant_volontaire", label: "En-avant volontaire" },
   { value: "dix_metres_plus", label: "10m de plus" },
   { value: "pas_dix_metres", label: "Pas à 10m" },
