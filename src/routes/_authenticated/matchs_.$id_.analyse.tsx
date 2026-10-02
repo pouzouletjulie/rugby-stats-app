@@ -244,6 +244,16 @@ function AnalysePage() {
     return r;
   }, [events]);
 
+  const receptionStats = useMemo(() => {
+    let total = 0, reussies = 0;
+    for (const e of events) {
+      if (e.deleted_at || e.event_type !== "reception_coup_envoi") continue;
+      total += 1;
+      if (e.payload?.["reussi"] === true) reussies += 1;
+    }
+    return { total, reussies };
+  }, [events]);
+
   const japTroisQuarts = useMemo(() => {
     const r = {
       engagement: { total: 0, recupere: 0, plaquageImmédiat: 0, moins10m: 0, directTouche: 0, autre: 0 },
@@ -1006,6 +1016,21 @@ function AnalysePage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* ── RÉCEPTION DE COUP D'ENVOI ── */}
+          {receptionStats.total > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Réception de coup d'envoi — AS Meudon</h3>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-2xl font-bold tabular-nums">
+                    {receptionStats.reussies}<span className="text-base text-muted-foreground">/{receptionStats.total}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{pct(receptionStats.reussies, receptionStats.total)} de réussite</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* ── DÉGAGEMENT ── */}
           <div className="space-y-3 print-break-before">
