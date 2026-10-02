@@ -87,7 +87,7 @@ export const TOUCHE_ZONES = [
   "Leurs 22m",
   "Leurs 5m",
 ] as const;
-export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant", "En-avant", "Pas 5m", "Pas droite"] as const;
+export const TOUCHE_SUITES = ["Ballon porté", "Jeu déployé", "Jeu au pied", "Jeu d'avant", "En-avant", "Pas 5m", "Pas droite", "Bras cassé"] as const;
 export const TURNOVER_NATURES = [
   { value: "grattage", label: "Grattage" },
   { value: "arrachage", label: "Arrachage" },
@@ -109,6 +109,7 @@ export const PENALTY_MOTIFS = [
   { value: "plaquage_air", label: "Plaquage en l'air" },
   { value: "cathedrale", label: "Cathédrale" },
   { value: "balle_gardee_sol", label: "Balle gardée au sol" },
+  { value: "talonnage_main", label: "Talonnage à la main" },
   { value: "melee", label: "Mêlée" },
   { value: "hors_jeu", label: "Hors-jeu" },
   { value: "perte_appui", label: "Perte d'appui" },
@@ -172,6 +173,7 @@ export const EVENT_LABELS: Record<string, string> = {
   ballon_touche: "Ballon touché",
   plaquage: "Plaquage",
   jeu_au_pied: "Jeu au pied",
+  reception_coup_envoi: "Réception de coup d'envoi",
 };
 
 export type MatchEvent = {

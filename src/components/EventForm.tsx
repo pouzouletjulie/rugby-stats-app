@@ -88,6 +88,9 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
             ],
           });
         }
+        if (possession !== gain) {
+          base.push({ k: "switch", key: "contre", label: "Contre" });
+        }
         if (possession === "meudon" && gain === "meudon") {
           base.push({ k: "select", key: "suite", label: "Suite de jeu", options: opts(TOUCHE_SUITES) });
         }
@@ -259,6 +262,8 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
       }
       return [...base, { k: "player" }];
     }
+    case "reception_coup_envoi":
+      return [{ k: "switch", key: "reussi", label: "Réussi" }];
     default:
       return [];
   }

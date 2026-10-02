@@ -262,7 +262,7 @@ function MatchInfoDialog({
 const EVENT_GROUPS = [
   {
     label: "Jeu courant",
-    types: ["en_avant", "turnover", "penalite", "entree_22", "jeu_au_pied"],
+    types: ["en_avant", "turnover", "penalite", "entree_22", "jeu_au_pied", "reception_coup_envoi"],
   },
   {
     label: "Conquête",
