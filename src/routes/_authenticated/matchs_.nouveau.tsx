@@ -28,7 +28,7 @@ import {
   type TeamCode,
 } from "@/lib/rugby";
 
-import { logAudit, useAuth } from "@/lib/useAuth";
+import { logAudit, useAuth, type UserClub } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/_authenticated/matchs_/nouveau")({
   head: () => ({
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/matchs_/nouveau")({
 
 function NewMatchPage() {
   const navigate = useNavigate();
-  const { canEdit } = useAuth();
+  const { canEdit, userClub } = useAuth();
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     team: "senior1" as TeamCode,
@@ -214,7 +214,15 @@ function NewMatchPage() {
             })()}
             <div className="space-y-1.5">
               <Label>Localisation</Label>
-              <Select value={form.location} onValueChange={(v) => set("location", v)}>
+              <Select
+                value={form.location}
+                onValueChange={(v) => {
+                  set("location", v);
+                  if (v === "Domicile" && (userClub as UserClub | null)?.home_pitch_type) {
+                    set("pitch_type", (userClub as UserClub).home_pitch_type!);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

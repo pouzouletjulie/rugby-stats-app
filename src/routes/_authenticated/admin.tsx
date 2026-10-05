@@ -42,8 +42,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
   notFoundComponent: () => <div className="p-6">Introuvable.</div>,
 });
 
+type Club = { id: string; name: string; home_pitch_type: string | null };
+
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "lecteur", label: "Lecteur" },
+  { value: "coach", label: "Coach" },
   { value: "editeur", label: "Éditeur" },
   { value: "admin", label: "Administrateur" },
 ];
@@ -116,15 +119,32 @@ function AdminPage() {
   const usersQ = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const [{ data: profiles, error }, { data: roles }] = await Promise.all([
+      const [
+        { data: profiles, error },
+        { data: roles },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { data: coachCats },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { data: clubs },
+      ] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at"),
         supabase.from("user_roles").select("user_id, role"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("coach_categories") as any).select("user_id, team_code"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("clubs") as any).select("id, name, home_pitch_type"),
       ]);
       if (error) throw error;
-      return (profiles ?? []).map((p) => ({
-        ...p,
-        roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as Role),
-      }));
+      return {
+        users: (profiles ?? []).map((p) => ({
+          ...p,
+          roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as Role),
+          coachCategories: (coachCats ?? [])
+            .filter((c: { user_id: string }) => c.user_id === p.id)
+            .map((c: { team_code: string }) => c.team_code) as string[],
+        })),
+        clubs: (clubs ?? []) as Club[],
+      };
     },
   });
 
@@ -145,6 +165,10 @@ function AdminPage() {
     await supabase.from("user_roles").delete().eq("user_id", userId);
     const rows: { user_id: string; role: Role }[] = [{ user_id: userId, role }];
     if (role === "admin") rows.push({ user_id: userId, role: "editeur" });
+    if (role !== "coach") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("coach_categories") as any).delete().eq("user_id", userId);
+    }
     const { error } = await supabase.from("user_roles").insert(rows);
     if (error) {
       toast.error(error.message);
@@ -159,6 +183,29 @@ function AdminPage() {
     void qc.invalidateQueries({ queryKey: ["admin-users"] });
     void qc.invalidateQueries({ queryKey: ["admin-audit"] });
     toast.success("Rôle mis à jour");
+  };
+
+  const saveCoachCats = async (userId: string, categories: string[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from("coach_categories") as any).delete().eq("user_id", userId);
+    if (categories.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from("coach_categories") as any).insert(
+        categories.map((c) => ({ user_id: userId, team_code: c })),
+      );
+      if (error) { toast.error(error.message); return; }
+    }
+    toast.success("Catégories mises à jour");
+    void qc.invalidateQueries({ queryKey: ["admin-users"] });
+  };
+
+  const setClub = async (userId: string, clubId: string | null) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("profiles") as any)
+      .update({ club_id: clubId === "__none__" ? null : clubId })
+      .eq("id", userId);
+    if (error) { toast.error(error.message); return; }
+    void qc.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
   const claimFirstAdmin = async () => {
@@ -193,8 +240,10 @@ function AdminPage() {
     );
   }
 
-  const pendingUsers = (usersQ.data ?? []).filter((u) => u.roles.length === 0);
-  const activeUsers = (usersQ.data ?? []).filter((u) => u.roles.length > 0);
+  const allUsers = usersQ.data?.users ?? [];
+  const clubs = usersQ.data?.clubs ?? [];
+  const pendingUsers = allUsers.filter((u) => u.roles.length === 0);
+  const activeUsers = allUsers.filter((u) => u.roles.length > 0);
 
   return (
     <AppShell>
@@ -218,6 +267,9 @@ function AdminPage() {
                 <Button size="sm" onClick={() => setRole(u.id, "lecteur")}>
                   Approuver (Lecteur)
                 </Button>
+                <Button size="sm" variant="outline" onClick={() => setRole(u.id, "coach")}>
+                  Approuver (Coach)
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => setRole(u.id, "editeur")}>
                   Approuver (Éditeur)
                 </Button>
@@ -231,32 +283,87 @@ function AdminPage() {
         <CardHeader>
           <CardTitle className="uppercase">Utilisateurs et rôles</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           {activeUsers.map((u) => {
             const current: Role = u.roles.includes("admin")
               ? "admin"
               : u.roles.includes("editeur")
                 ? "editeur"
-                : "lecteur";
+                : u.roles.includes("coach")
+                  ? "coach"
+                  : "lecteur";
+            const isCoachUser = current === "coach";
             return (
-              <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-md border px-3 py-2">
-                <div className="min-w-48 flex-1">
-                  <p className="text-sm font-medium">{u.full_name || u.email}</p>
-                  <p className="text-xs text-muted-foreground">{u.email}</p>
+              <div key={u.id} className="rounded-md border px-3 py-2 space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-48 flex-1">
+                    <p className="text-sm font-medium">{u.full_name || u.email}</p>
+                    <p className="text-xs text-muted-foreground">{u.email}</p>
+                  </div>
+                  {u.id === user?.id && <Badge variant="secondary">Vous</Badge>}
+                  {/* Role selector */}
+                  <Select value={current} onValueChange={(v) => setRole(u.id, v as Role)}>
+                    <SelectTrigger className="w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_OPTIONS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          {r.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {/* Club selector */}
+                  <Select
+                    value={(u as { club_id?: string | null }).club_id ?? "__none__"}
+                    onValueChange={(v) => setClub(u.id, v)}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Club…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Aucun club —</SelectItem>
+                      {clubs.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                {u.id === user?.id && <Badge variant="secondary">Vous</Badge>}
-                <Select value={current} onValueChange={(v) => setRole(u.id, v as Role)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Coach category checkboxes */}
+                {isCoachUser && (
+                  <div className="pl-1 pt-1 border-t">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                      Catégories gérées
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {TEAMS.map((t) => {
+                        const checked = u.coachCategories.includes(t.value);
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => {
+                              const next = checked
+                                ? u.coachCategories.filter((c) => c !== t.value)
+                                : [...u.coachCategories, t.value];
+                              void saveCoachCats(u.id, next);
+                            }}
+                            className={`rounded border px-2.5 py-1 text-xs font-medium transition-colors ${
+                              checked
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background hover:bg-accent/10"
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -355,6 +462,7 @@ function AdminPage() {
           ))}
         </CardContent>
       </Card>
+
       <Dialog open={champDialogOpen} onOpenChange={(o) => !o && setChampDialogOpen(false)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

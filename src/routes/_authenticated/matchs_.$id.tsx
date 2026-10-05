@@ -281,7 +281,7 @@ const EVENT_GROUPS = [
 function MatchPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { canEdit, isAdmin } = useAuth();
+  const { canEdit, canEditTeam, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [activeType, setActiveType] = useState<string | null>(null);
   const [editing, setEditing] = useState<MatchEvent | null>(null);
@@ -395,7 +395,7 @@ function MatchPage() {
   };
   const period = activePeriod(events);
   const finalized = match?.status === "finalise";
-  const editable = canEdit && !finalized;
+  const editable = canEditTeam(match?.team ?? "") && !finalized;
 
   const meudonPts = stats.sides.meudon.points;
   const advPts = stats.sides.adversaire.points;
