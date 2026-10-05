@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -453,9 +453,6 @@ function JoueursPage() {
                 <div className="divide-y">
                   {filtered.map((p) => (
                     <div key={p.id} className="flex flex-wrap items-center gap-3 py-3">
-                      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-primary/10">
-                        <UserRound className="size-4 text-sidebar-primary" />
-                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold">
                           {p.last_name.toUpperCase()} {p.first_name}
@@ -465,16 +462,16 @@ function JoueursPage() {
                             </span>
                           )}
                         </p>
-                        {p.team && (
-                          <p className="mt-0.5 text-xs text-muted-foreground">{teamLabel(p.team)}</p>
-                        )}
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {p.team && (
+                            <Badge variant="outline" className="text-[10px]">{teamLabel(p.team)}</Badge>
+                          )}
+                          {p.first_row && (
+                            <Badge variant="secondary" className="text-[10px]">1L</Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {p.first_row && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            1ère ligne
-                          </Badge>
-                        )}
                         {canEdit && (
                           <>
                             <Button

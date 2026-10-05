@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { logAudit, useAuth, type Role, type UserClub } from "@/lib/useAuth";
 import { Input } from "@/components/ui/input";
+import { Pencil } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,6 +58,9 @@ function AdminPage() {
   const canAdmin = isAdmin || isAdminClub;
   const qc = useQueryClient();
   const [claiming, setClaiming] = useState(false);
+  const [editingClubUserId, setEditingClubUserId] = useState<string | null>(null);
+  const [clubSearch, setClubSearch] = useState("");
+  const clubSearchRef = useRef<HTMLInputElement>(null);
   const [champDialogOpen, setChampDialogOpen] = useState(false);
   const [editingChamp, setEditingChamp] = useState<Championship | null>(null);
   const [champForm, setChampForm] = useState<{
@@ -338,25 +342,67 @@ function AdminPage() {
                   </Select>
                 </div>
                 {/* Ligne 2 : club */}
-                <div className="flex items-center gap-2 border-t pt-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground w-10 shrink-0">
+                <div className="flex items-start gap-2 border-t pt-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground w-10 shrink-0 pt-1.5">
                     Club
                   </span>
-                  <Select
-                    value={(u as { club_id?: string | null }).club_id ?? ""}
-                    onValueChange={(v) => setClub(u.id, v)}
-                  >
-                    <SelectTrigger className="w-56">
-                      <SelectValue placeholder="Choisir un club…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clubs.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {editingClubUserId === u.id ? (
+                    <div className="relative flex-1 max-w-xs">
+                      <Input
+                        ref={clubSearchRef}
+                        autoFocus
+                        placeholder="Rechercher un club…"
+                        value={clubSearch}
+                        onChange={(e) => setClubSearch(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Escape") { setEditingClubUserId(null); setClubSearch(""); } }}
+                        onBlur={() => { setEditingClubUserId(null); setClubSearch(""); }}
+                        className="h-8 text-sm"
+                      />
+                      {(() => {
+                        const filtered = clubs.filter((c) =>
+                          c.name.toLowerCase().includes(clubSearch.toLowerCase())
+                        );
+                        if (!filtered.length) return null;
+                        return (
+                          <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md">
+                            {filtered.map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  void setClub(u.id, c.id).then(() => {
+                                    setEditingClubUserId(null);
+                                    setClubSearch("");
+                                  });
+                                }}
+                              >
+                                {c.name}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">
+                        {clubs.find((c) => c.id === (u as { club_id?: string | null }).club_id)?.name ?? (
+                          <span className="text-muted-foreground italic">Aucun club</span>
+                        )}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-6"
+                        onClick={() => { setEditingClubUserId(u.id); setClubSearch(""); }}
+                        aria-label="Modifier le club"
+                      >
+                        <Pencil className="size-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 {/* Ligne 3 : catégories coach */}
                 {isCoachUser && (

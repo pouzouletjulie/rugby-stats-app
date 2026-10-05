@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { useAuth } from "@/lib/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   PENALTY_MOTIFS,
   TURNOVER_NATURES,
@@ -107,8 +109,24 @@ type IndivSortKey = "name" | "essais" | "points" | "blanc" | "jaune" | "bleu" | 
 
 function AnalysePage() {
   const { id } = Route.useParams();
+  const { canEditTeam } = useAuth();
+  const qc = useQueryClient();
   const [indivSortKey, setIndivSortKey] = useState<IndivSortKey>("name");
   const [indivSortDir, setIndivSortDir] = useState<"asc" | "desc">("asc");
+  const [notes, setNotes] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveNotes = useCallback(async (value: string) => {
+    await supabase.from("matches").update({ notes: value || null } as never).eq("id", id);
+    void qc.invalidateQueries({ queryKey: ["match", id] });
+  }, [id, qc]);
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value.slice(0, 500);
+    setNotes(value);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => void saveNotes(value), 800);
+  };
 
   const matchQ = useQuery({
     queryKey: ["match", id],
@@ -146,6 +164,7 @@ function AnalysePage() {
   });
 
   const match = matchQ.data;
+  if (match && notes === null) setNotes(((match as Record<string, unknown>)["notes"] as string) ?? "");
   const players = playersQ.data ?? [];
   const events = eventsQ.data ?? [];
   const stats = useMemo(() => computeStats(events), [events]);
@@ -1208,6 +1227,26 @@ function AnalysePage() {
               </Card>
             );
           })()}
+        </section>
+
+        <section className="analyse-section print:hidden">
+          <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Notes</h2>
+          <Card>
+            <CardContent className="pt-4">
+              <Textarea
+                value={notes ?? ""}
+                onChange={handleNotesChange}
+                placeholder="Notes sur le match…"
+                maxLength={500}
+                rows={5}
+                disabled={!canEditTeam(match?.team ?? "")}
+                className="resize-none"
+              />
+              <p className="mt-1.5 text-right text-xs text-muted-foreground">
+                {(notes ?? "").length} / 500
+              </p>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </AppShell>
