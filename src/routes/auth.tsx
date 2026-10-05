@@ -41,16 +41,19 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [clubId, setClubId] = useState("");
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const [clubsLoading, setClubsLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from("clubs") as any).select("id, name").order("name").then(
-      ({ data }: { data: { id: string; name: string }[] | null }) => {
+      ({ data, error }: { data: { id: string; name: string }[] | null; error: unknown }) => {
+        if (error) console.error("[clubs fetch]", error);
         if (data?.length) {
           setClubs(data);
           setClubId(data[0].id);
         }
+        setClubsLoading(false);
       }
     );
   }, []);
@@ -188,21 +191,29 @@ function AuthPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Club</Label>
-                    <Select value={clubId} onValueChange={setClubId} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir un club…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clubs.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Club *</Label>
+                    {clubsLoading ? (
+                      <p className="text-xs text-muted-foreground">Chargement des clubs…</p>
+                    ) : clubs.length === 0 ? (
+                      <p className="text-xs text-destructive">
+                        Aucun club disponible. Contactez un administrateur.
+                      </p>
+                    ) : (
+                      <Select value={clubId} onValueChange={setClubId} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un club…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clubs.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy || !clubId}>
+                  <Button type="submit" className="w-full" disabled={busy || !clubId || clubsLoading}>
                     Créer mon compte
                   </Button>
                 </form>
