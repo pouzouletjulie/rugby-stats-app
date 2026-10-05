@@ -15,7 +15,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, highestRole, isAdmin, isAdminClub, realIsAdmin, realIsAdminClub, isPending, previewMode, setPreviewMode } = useAuth();
+  const { user, highestRole, isAdmin, isAdminClub, realIsAdmin, realIsAdminClub, isPending, previewMode, setPreviewMode, isImpersonating, impersonatedUser, stopImpersonation } = useAuth();
   const navigate = useNavigate();
 
   const signOut = async () => {
@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             </Button>
           )}
-          {(realIsAdmin || realIsAdminClub) && (
+          {(realIsAdmin || realIsAdminClub) && !isImpersonating && (
             <Button
               variant={previewMode ? "secondary" : "ghost"}
               size="sm"
@@ -64,6 +64,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               {previewMode ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               {previewMode ? "Quitter prévisualisation" : "Vue lecteur"}
+            </Button>
+          )}
+          {isImpersonating && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={stopImpersonation}
+              className="bg-violet-500/20 text-violet-200 hover:bg-violet-500/30"
+              title="Quitter l'impersonation"
+            >
+              <EyeOff className="size-4" />
+              Quitter {impersonatedUser?.name}
             </Button>
           )}
         </nav>
@@ -88,6 +100,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       {previewMode && (
         <div className="bg-amber-500/90 px-4 py-1.5 text-center text-xs font-medium text-white">
           Mode prévisualisation — vous voyez l'interface telle qu'un Lecteur la voit
+        </div>
+      )}
+      {isImpersonating && (
+        <div className="bg-violet-600/90 px-4 py-1.5 text-center text-xs font-medium text-white">
+          Vous voyez l'app en tant que <span className="font-bold">{impersonatedUser?.name}</span>
         </div>
       )}
     </header>

@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { logAudit, useAuth, type Role, type UserClub } from "@/lib/useAuth";
+import { logAudit, useAuth, type Role, type UserClub, type ImpersonatedUser } from "@/lib/useAuth";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -54,7 +54,7 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 ];
 
 function AdminPage() {
-  const { isAdmin, isAdminClub, user, userClub } = useAuth();
+  const { isAdmin, isAdminClub, user, userClub, startImpersonation, isImpersonating, stopImpersonation, impersonatedUser } = useAuth();
   const canAdmin = isAdmin || isAdminClub;
   const qc = useQueryClient();
   const [claiming, setClaiming] = useState(false);
@@ -340,6 +340,31 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {isAdmin && u.id !== user?.id && (
+                    impersonatedUser?.userId === u.id ? (
+                      <Button size="sm" variant="secondary" className="bg-violet-500/20 text-violet-700 hover:bg-violet-500/30" onClick={stopImpersonation}>
+                        Quitter
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const club = clubs.find((c) => c.id === (u as { club_id?: string | null }).club_id);
+                          const data: ImpersonatedUser = {
+                            userId: u.id,
+                            name: u.full_name || u.email || u.id,
+                            roles: u.roles,
+                            coachCategories: u.coachCategories,
+                            userClub: club ? { id: club.id, name: club.name, home_pitch_type: club.home_pitch_type } : null,
+                          };
+                          startImpersonation(data);
+                        }}
+                      >
+                        Voir en tant que
+                      </Button>
+                    )
+                  )}
                 </div>
                 {/* Ligne 2 : club */}
                 <div className="flex items-start gap-2 border-t pt-2">

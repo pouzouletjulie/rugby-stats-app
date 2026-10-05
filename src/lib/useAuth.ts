@@ -10,7 +10,16 @@ export type UserClub = {
   home_pitch_type: string | null;
 };
 
+export type ImpersonatedUser = {
+  userId: string;
+  name: string;
+  roles: Role[];
+  coachCategories: string[];
+  userClub: UserClub | null;
+};
+
 const PREVIEW_KEY = "rugby_preview_lecteur";
+const IMPERSONATE_KEY = "rugby_impersonate_user";
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -22,10 +31,27 @@ export function useAuth() {
   const [previewMode, setPreviewModeState] = useState(
     () => typeof window !== "undefined" && localStorage.getItem(PREVIEW_KEY) === "true",
   );
+  const [impersonatedUser, setImpersonatedUserState] = useState<ImpersonatedUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const s = localStorage.getItem(IMPERSONATE_KEY);
+      return s ? (JSON.parse(s) as ImpersonatedUser) : null;
+    } catch { return null; }
+  });
 
   const setPreviewMode = (val: boolean) => {
     localStorage.setItem(PREVIEW_KEY, String(val));
     setPreviewModeState(val);
+  };
+
+  const startImpersonation = (data: ImpersonatedUser) => {
+    localStorage.setItem(IMPERSONATE_KEY, JSON.stringify(data));
+    setImpersonatedUserState(data);
+  };
+
+  const stopImpersonation = () => {
+    localStorage.removeItem(IMPERSONATE_KEY);
+    setImpersonatedUserState(null);
   };
 
   async function fetchUserData(userId: string) {
@@ -88,20 +114,26 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const realIsAdmin = roles.includes("admin");          // super admin
-  const realIsAdminClub = roles.includes("admin_club"); // admin club
-  const isAdmin = realIsAdmin && !previewMode;
-  const isAdminClub = realIsAdminClub && !previewMode;
-  const isCoach = roles.includes("coach") && !previewMode;
+  const realIsAdmin = roles.includes("admin");
+  const realIsAdminClub = roles.includes("admin_club");
 
-  // canEdit = opérations de haut niveau (créer/modifier un match, accès admin)
-  const canEdit = (roles.includes("editeur") || realIsAdmin || realIsAdminClub) && !previewMode;
+  // Quand le super admin usurpe un utilisateur, on utilise ses droits
+  const isImpersonating = realIsAdmin && impersonatedUser !== null;
+  const activeRoles: Role[] = isImpersonating ? impersonatedUser!.roles : roles;
+  const activeCoachCategories = isImpersonating ? impersonatedUser!.coachCategories : coachCategories;
+  const activeUserClub = isImpersonating ? impersonatedUser!.userClub : userClub;
+  const activePreviewMode = isImpersonating ? false : previewMode;
 
-  // canEditTeam = ajouter/modifier des événements sur un match d'une catégorie donnée
+  const isAdmin = activeRoles.includes("admin") && !activePreviewMode;
+  const isAdminClub = activeRoles.includes("admin_club") && !activePreviewMode;
+  const isCoach = activeRoles.includes("coach") && !activePreviewMode;
+
+  const canEdit = (activeRoles.includes("editeur") || activeRoles.includes("admin") || activeRoles.includes("admin_club")) && !activePreviewMode;
+
   const canEditTeam = (teamCode: string): boolean => {
-    if (previewMode) return false;
-    if (roles.includes("editeur") || realIsAdmin || realIsAdminClub) return true;
-    if (roles.includes("coach")) return coachCategories.includes(teamCode);
+    if (activePreviewMode) return false;
+    if (activeRoles.includes("editeur") || activeRoles.includes("admin") || activeRoles.includes("admin_club")) return true;
+    if (activeRoles.includes("coach")) return activeCoachCategories.includes(teamCode);
     return false;
   };
 
@@ -109,7 +141,7 @@ export function useAuth() {
     ? "admin"
     : isAdminClub
       ? "admin_club"
-      : roles.includes("editeur")
+      : activeRoles.includes("editeur")
         ? "editeur"
         : isCoach
           ? "coach"
@@ -128,13 +160,17 @@ export function useAuth() {
     canEditTeam,
     highestRole,
     isPending,
-    previewMode,
+    previewMode: activePreviewMode,
     setPreviewMode,
     realIsAdmin,
     realIsAdminClub,
     isCoach,
-    coachCategories,
-    userClub,
+    coachCategories: activeCoachCategories,
+    userClub: activeUserClub,
+    impersonatedUser,
+    startImpersonation,
+    stopImpersonation,
+    isImpersonating,
   };
 }
 
