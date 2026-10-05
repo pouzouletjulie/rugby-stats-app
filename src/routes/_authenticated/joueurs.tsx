@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/useAuth";
 import { PLAYER_TEAMS, teamLabel, type Player, type Championship } from "@/lib/rugby";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,11 +33,9 @@ export const Route = createFileRoute("/_authenticated/joueurs")({
 const playerSchema = z.object({
   last_name: z.string().min(1, "Nom obligatoire"),
   first_name: z.string().min(1, "Prénom obligatoire"),
-  birth_date: z.string().optional(),
-  license_number: z.string().optional(),
-  first_row: z.boolean().default(false),
-  team: z.string().optional(),
   nickname: z.string().optional(),
+  team: z.string().optional(),
+  first_row: z.boolean().default(false),
 });
 
 type PlayerForm = z.infer<typeof playerSchema>;
@@ -66,26 +64,20 @@ function PlayerDialog({
       ? {
           last_name: player.last_name,
           first_name: player.first_name,
-          birth_date: player.birth_date ?? "",
-          license_number: player.license_number ?? "",
-          first_row: player.first_row,
-          team: player.team ?? "",
           nickname: player.nickname ?? "",
+          team: player.team ?? "",
+          first_row: player.first_row,
         }
-      : { first_row: false, team: "", birth_date: "", license_number: "", nickname: "" },
+      : { team: "", nickname: "", first_row: false },
   });
-
-  const firstRow = watch("first_row");
 
   const onSubmit = async (values: PlayerForm) => {
     const payload = {
       last_name: values.last_name.trim().toUpperCase(),
       first_name: values.first_name.trim().toUpperCase(),
-      birth_date: values.birth_date?.trim() || null,
-      license_number: values.license_number?.trim() || null,
-      first_row: values.first_row,
-      team: (values.team?.trim() || null) as Player["team"],
       nickname: values.nickname?.trim() || null,
+      team: (values.team?.trim() || null) as Player["team"],
+      first_row: values.first_row,
       updated_at: new Date().toISOString(),
     };
 
@@ -128,28 +120,17 @@ function PlayerDialog({
             <Input {...register("nickname")} placeholder="Toto" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Date de naissance</Label>
-              <Input {...register("birth_date")} type="date" />
-            </div>
-            <div className="space-y-1">
-              <Label>Numéro de licence</Label>
-              <Input {...register("license_number")} placeholder="123456" />
-            </div>
-          </div>
-
           <div className="space-y-1">
-            <Label>Équipe</Label>
+            <Label>Catégorie</Label>
             <Select
               value={watch("team") ?? ""}
               onValueChange={(v) => setValue("team", v === "none" ? "" : v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Toutes équipes" />
+                <SelectValue placeholder="Toutes catégories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Toutes équipes</SelectItem>
+                <SelectItem value="none">Toutes catégories</SelectItem>
                 {PLAYER_TEAMS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
@@ -162,7 +143,7 @@ function PlayerDialog({
           <div className="flex items-center gap-3">
             <Switch
               id="first_row"
-              checked={firstRow}
+              checked={watch("first_row")}
               onCheckedChange={(v) => setValue("first_row", v)}
             />
             <Label htmlFor="first_row">Première ligne</Label>
@@ -185,10 +166,27 @@ function PlayerDialog({
 type StatsSortKey = "name" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
 
 function JoueursPage() {
-  const { canEdit } = useAuth();
+  const { canEdit, isCoach, coachCategories } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [teamFilter, setTeamFilter] = useState<string>("");
+
+  // Map match team codes (senior1/senior_reserve) → player team code (senior)
+  const coachPlayerTeams = useMemo(() => {
+    const mapped = new Set<string>();
+    for (const c of coachCategories) {
+      if (c === "senior1" || c === "senior_reserve") mapped.add("senior");
+      else mapped.add(c);
+    }
+    return [...mapped];
+  }, [coachCategories]);
+
+  // Auto-select first category when coach data loads
+  useEffect(() => {
+    if (isCoach && coachPlayerTeams.length > 0 && !teamFilter) {
+      setTeamFilter(coachPlayerTeams[0] ?? "");
+    }
+  }, [isCoach, coachPlayerTeams, teamFilter]);
   const [championshipFilter, setChampionshipFilter] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
@@ -223,16 +221,21 @@ function JoueursPage() {
   });
 
   const statsQ = useQuery({
-    queryKey: ["player-stats-aggregate", teamFilter, championshipFilter],
+    queryKey: ["player-stats-aggregate", teamFilter, championshipFilter, coachPlayerTeams.join(",")],
     queryFn: async () => {
-      // Step 1: get match IDs filtered by championship if set
-      let matchQuery = supabase.from("matches").select("id");
+      // Step 1: get match IDs filtered by championship and coach category if applicable
+      let matchQuery = supabase.from("matches").select("id, team");
       if (championshipFilter) matchQuery = matchQuery.eq("championship_id", championshipFilter);
-      const { data: matches } = await matchQuery;
-      const matchIds = (matches ?? []).map((m: { id: string }) => m.id);
+      const { data: matchesRaw } = await matchQuery;
+      const matchesFiltered = isCoach
+        ? (matchesRaw ?? []).filter((m: { id: string; team: string }) => coachCategories.includes(m.team))
+        : (matchesRaw ?? []);
+      const matchIds = matchesFiltered.map((m: { id: string }) => m.id);
 
+      if (!matchIds.length && isCoach) {
+        return [];
+      }
       if (!matchIds.length) {
-        // Still return all players with zero stats
         let playerQuery = supabase.from("players").select("*").order("last_name");
         if (teamFilter) playerQuery = playerQuery.eq("team", teamFilter);
         const { data: playerList } = await playerQuery;
@@ -317,7 +320,8 @@ function JoueursPage() {
       !search.trim() ||
       `${p.first_name} ${p.last_name} ${p.nickname ?? ""}`.toLowerCase().includes(search.toLowerCase());
     const matchTeam = !teamFilter || p.team === teamFilter;
-    return matchSearch && matchTeam;
+    const matchCoach = !isCoach || !p.team || coachPlayerTeams.includes(p.team);
+    return matchSearch && matchTeam && matchCoach;
   });
 
   const championships = championshipsQ.data ?? [];
@@ -330,7 +334,8 @@ function JoueursPage() {
     const matchSearch =
       !search.trim() ||
       `${p.first_name} ${p.last_name} ${p.nickname ?? ""}`.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
+    const matchCoach = !isCoach || !p.team || coachPlayerTeams.includes(p.team);
+    return matchSearch && matchCoach;
   });
 
   const sortedStats = [...filteredStats].sort((a, b) => {
@@ -402,8 +407,8 @@ function JoueursPage() {
                 <SelectValue placeholder="Toutes équipes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes équipes</SelectItem>
-                {PLAYER_TEAMS.map((t) => (
+                {!isCoach && <SelectItem value="">Toutes équipes</SelectItem>}
+                {PLAYER_TEAMS.filter((t) => !isCoach || coachPlayerTeams.includes(t.value)).map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
@@ -459,16 +464,9 @@ function JoueursPage() {
                             </span>
                           )}
                         </p>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          {p.team && <span>{teamLabel(p.team)}</span>}
-                          {p.license_number && <span>Licence : {p.license_number}</span>}
-                          {p.birth_date && (
-                            <span>
-                              Né(e) le{" "}
-                              {new Date(p.birth_date).toLocaleDateString("fr-FR")}
-                            </span>
-                          )}
-                        </div>
+                        {p.team && (
+                          <p className="mt-0.5 text-xs text-muted-foreground">{teamLabel(p.team)}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         {p.first_row && (

@@ -343,14 +343,13 @@ function AdminPage() {
                     Club
                   </span>
                   <Select
-                    value={(u as { club_id?: string | null }).club_id ?? "__none__"}
+                    value={(u as { club_id?: string | null }).club_id ?? ""}
                     onValueChange={(v) => setClub(u.id, v)}
                   >
                     <SelectTrigger className="w-56">
-                      <SelectValue placeholder="Aucun club" />
+                      <SelectValue placeholder="Choisir un club…" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">— Aucun club —</SelectItem>
                       {clubs.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name}

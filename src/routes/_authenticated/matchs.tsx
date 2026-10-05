@@ -46,7 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function MatchesPage() {
-  const { canEdit } = useAuth();
+  const { canEdit, isCoach, coachCategories } = useAuth();
   const [team, setTeam] = useState("all");
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
@@ -87,7 +87,8 @@ function MatchesPage() {
     (m) =>
       (team === "all" || m.team === team) &&
       (status === "all" || m.status === status) &&
-      (!search || m.opponent.toLowerCase().includes(search.toLowerCase())),
+      (!search || m.opponent.toLowerCase().includes(search.toLowerCase())) &&
+      (!isCoach || coachCategories.includes(m.team)),
   );
 
   return (
