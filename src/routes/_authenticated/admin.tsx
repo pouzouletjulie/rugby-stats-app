@@ -208,6 +208,7 @@ function AdminPage() {
       .update({ club_id: clubId === "__none__" ? null : clubId })
       .eq("id", userId);
     if (error) { toast.error(error.message); return; }
+    toast.success("Club mis à jour");
     void qc.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
@@ -316,13 +317,13 @@ function AdminPage() {
             const isCoachUser = current === "coach";
             return (
               <div key={u.id} className="rounded-md border px-3 py-2 space-y-2">
+                {/* Ligne 1 : identité + rôle */}
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="min-w-48 flex-1">
                     <p className="text-sm font-medium">{u.full_name || u.email}</p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
                   {u.id === user?.id && <Badge variant="secondary">Vous</Badge>}
-                  {/* Role selector */}
                   <Select value={current} onValueChange={(v) => setRole(u.id, v as Role)}>
                     <SelectTrigger className="w-44">
                       <SelectValue />
@@ -335,13 +336,18 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {/* Club selector */}
+                </div>
+                {/* Ligne 2 : club */}
+                <div className="flex items-center gap-2 border-t pt-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground w-10 shrink-0">
+                    Club
+                  </span>
                   <Select
                     value={(u as { club_id?: string | null }).club_id ?? "__none__"}
                     onValueChange={(v) => setClub(u.id, v)}
                   >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Club…" />
+                    <SelectTrigger className="w-56">
+                      <SelectValue placeholder="Aucun club" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">— Aucun club —</SelectItem>
@@ -353,7 +359,7 @@ function AdminPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Coach category checkboxes */}
+                {/* Ligne 3 : catégories coach */}
                 {isCoachUser && (
                   <div className="pl-1 pt-1 border-t">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
