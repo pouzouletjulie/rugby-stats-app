@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "lecteur" | "editeur" | "admin" | "coach";
+export type Role = "lecteur" | "editeur" | "admin" | "admin_club" | "coach";
 
 export type UserClub = {
   id: string;
@@ -88,25 +88,33 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const realIsAdmin = roles.includes("admin");
+  const realIsAdmin = roles.includes("admin");          // super admin
+  const realIsAdminClub = roles.includes("admin_club"); // admin club
   const isAdmin = realIsAdmin && !previewMode;
+  const isAdminClub = realIsAdminClub && !previewMode;
   const isCoach = roles.includes("coach") && !previewMode;
-  const canEdit = (roles.includes("editeur") || realIsAdmin) && !previewMode;
 
+  // canEdit = opérations de haut niveau (créer/modifier un match, accès admin)
+  const canEdit = (roles.includes("editeur") || realIsAdmin || realIsAdminClub) && !previewMode;
+
+  // canEditTeam = ajouter/modifier des événements sur un match d'une catégorie donnée
   const canEditTeam = (teamCode: string): boolean => {
     if (previewMode) return false;
-    if (roles.includes("editeur") || realIsAdmin) return true;
+    if (roles.includes("editeur") || realIsAdmin || realIsAdminClub) return true;
     if (roles.includes("coach")) return coachCategories.includes(teamCode);
     return false;
   };
 
   const highestRole: Role = isAdmin
     ? "admin"
-    : roles.includes("editeur")
-      ? "editeur"
-      : isCoach
-        ? "coach"
-        : "lecteur";
+    : isAdminClub
+      ? "admin_club"
+      : roles.includes("editeur")
+        ? "editeur"
+        : isCoach
+          ? "coach"
+          : "lecteur";
+
   const isPending = !loading && !!user && roles.length === 0;
 
   return {
@@ -115,6 +123,7 @@ export function useAuth() {
     roles,
     loading,
     isAdmin,
+    isAdminClub,
     canEdit,
     canEditTeam,
     highestRole,
@@ -122,6 +131,7 @@ export function useAuth() {
     previewMode,
     setPreviewMode,
     realIsAdmin,
+    realIsAdminClub,
     isCoach,
     coachCategories,
     userClub,

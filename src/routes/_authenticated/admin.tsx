@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { logAudit, useAuth, type Role } from "@/lib/useAuth";
+import { logAudit, useAuth, type Role, type UserClub } from "@/lib/useAuth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -48,11 +48,13 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "lecteur", label: "Lecteur" },
   { value: "coach", label: "Coach" },
   { value: "editeur", label: "Éditeur" },
-  { value: "admin", label: "Administrateur" },
+  { value: "admin_club", label: "Admin club" },
+  { value: "admin", label: "Super Admin" },
 ];
 
 function AdminPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isAdminClub, user, userClub } = useAuth();
+  const canAdmin = isAdmin || isAdminClub;
   const qc = useQueryClient();
   const [claiming, setClaiming] = useState(false);
   const [champDialogOpen, setChampDialogOpen] = useState(false);
@@ -165,6 +167,7 @@ function AdminPage() {
     await supabase.from("user_roles").delete().eq("user_id", userId);
     const rows: { user_id: string; role: Role }[] = [{ user_id: userId, role }];
     if (role === "admin") rows.push({ user_id: userId, role: "editeur" });
+    if (role === "admin_club") rows.push({ user_id: userId, role: "editeur" });
     if (role !== "coach") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("coach_categories") as any).delete().eq("user_id", userId);
@@ -220,7 +223,7 @@ function AdminPage() {
     window.location.reload();
   };
 
-  if (!isAdmin) {
+  if (!canAdmin) {
     return (
       <AppShell>
         <Card>
@@ -242,8 +245,19 @@ function AdminPage() {
 
   const allUsers = usersQ.data?.users ?? [];
   const clubs = usersQ.data?.clubs ?? [];
-  const pendingUsers = allUsers.filter((u) => u.roles.length === 0);
-  const activeUsers = allUsers.filter((u) => u.roles.length > 0);
+
+  // Admin club voit uniquement les utilisateurs de son club
+  const visibleUsers = isAdmin
+    ? allUsers
+    : allUsers.filter((u) => (u as { club_id?: string | null }).club_id === (userClub as UserClub | null)?.id);
+
+  const pendingUsers = visibleUsers.filter((u) => u.roles.length === 0);
+  const activeUsers = visibleUsers.filter((u) => u.roles.length > 0);
+
+  // Admin club ne peut pas assigner super admin
+  const availableRoles = isAdmin
+    ? ROLE_OPTIONS
+    : ROLE_OPTIONS.filter((r) => r.value !== "admin");
 
   return (
     <AppShell>
@@ -265,14 +279,19 @@ function AdminPage() {
                   <p className="text-xs text-muted-foreground">{u.email}</p>
                 </div>
                 <Button size="sm" onClick={() => setRole(u.id, "lecteur")}>
-                  Approuver (Lecteur)
+                  Lecteur
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setRole(u.id, "coach")}>
-                  Approuver (Coach)
+                  Coach
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setRole(u.id, "editeur")}>
-                  Approuver (Éditeur)
+                  Éditeur
                 </Button>
+                {isAdmin && (
+                  <Button size="sm" variant="outline" onClick={() => setRole(u.id, "admin_club")}>
+                    Admin club
+                  </Button>
+                )}
               </div>
             ))}
           </CardContent>
@@ -287,11 +306,13 @@ function AdminPage() {
           {activeUsers.map((u) => {
             const current: Role = u.roles.includes("admin")
               ? "admin"
-              : u.roles.includes("editeur")
-                ? "editeur"
-                : u.roles.includes("coach")
-                  ? "coach"
-                  : "lecteur";
+              : u.roles.includes("admin_club")
+                ? "admin_club"
+                : u.roles.includes("editeur")
+                  ? "editeur"
+                  : u.roles.includes("coach")
+                    ? "coach"
+                    : "lecteur";
             const isCoachUser = current === "coach";
             return (
               <div key={u.id} className="rounded-md border px-3 py-2 space-y-2">
@@ -307,7 +328,7 @@ function AdminPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROLE_OPTIONS.map((r) => (
+                      {availableRoles.map((r) => (
                         <SelectItem key={r.value} value={r.value}>
                           {r.label}
                         </SelectItem>

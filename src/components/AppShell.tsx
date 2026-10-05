@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/useAuth";
 
 const ROLE_LABEL: Record<string, string> = {
-  admin: "Administrateur",
+  admin: "Super Admin",
+  admin_club: "Admin club",
   editeur: "Éditeur",
+  coach: "Coach",
   lecteur: "Lecteur",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, highestRole, isAdmin, realIsAdmin, isPending, previewMode, setPreviewMode } = useAuth();
+  const { user, highestRole, isAdmin, isAdminClub, realIsAdmin, realIsAdminClub, isPending, previewMode, setPreviewMode } = useAuth();
   const navigate = useNavigate();
 
   const signOut = async () => {
@@ -45,14 +47,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </>
           )}
-          {isAdmin && (
+          {(isAdmin || isAdminClub) && (
             <Button asChild variant="ghost" size="sm" className="text-sidebar-foreground hover:bg-sidebar-accent">
               <Link to="/admin">
                 <Users className="size-4" /> Administration
               </Link>
             </Button>
           )}
-          {realIsAdmin && (
+          {(realIsAdmin || realIsAdminClub) && (
             <Button
               variant={previewMode ? "secondary" : "ghost"}
               size="sm"

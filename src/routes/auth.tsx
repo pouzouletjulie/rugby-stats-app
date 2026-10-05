@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -32,7 +39,21 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("clubs") as any).select("id, name").order("name").then(
+      ({ data }: { data: { id: string; name: string }[] | null }) => {
+        if (data?.length) {
+          setClubs(data);
+          setClubId(data[0].id);
+        }
+      }
+    );
+  }, []);
 
   useEffect(() => {
     let navigated = false;
@@ -71,7 +92,7 @@ function AuthPage() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth`,
-        data: { full_name: fullName },
+        data: { full_name: fullName, club_id: clubId },
       },
     });
     setBusy(false);
@@ -166,7 +187,22 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
+                  <div className="space-y-1.5">
+                    <Label>Club</Label>
+                    <Select value={clubId} onValueChange={setClubId} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choisir un club…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clubs.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy || !clubId}>
                     Créer mon compte
                   </Button>
                 </form>
