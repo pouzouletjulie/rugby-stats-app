@@ -346,7 +346,7 @@ function AdminPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground w-10 shrink-0 pt-1.5">
                     Club
                   </span>
-                  {editingClubUserId === u.id ? (
+                  {isAdmin && editingClubUserId === u.id ? (
                     <div className="relative flex-1 max-w-xs">
                       <Input
                         ref={clubSearchRef}
@@ -392,15 +392,17 @@ function AdminPage() {
                           <span className="text-muted-foreground italic">Aucun club</span>
                         )}
                       </span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="size-6"
-                        onClick={() => { setEditingClubUserId(u.id); setClubSearch(""); }}
-                        aria-label="Modifier le club"
-                      >
-                        <Pencil className="size-3" />
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-6"
+                          onClick={() => { setEditingClubUserId(u.id); setClubSearch(""); }}
+                          aria-label="Modifier le club"
+                        >
+                          <Pencil className="size-3" />
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
