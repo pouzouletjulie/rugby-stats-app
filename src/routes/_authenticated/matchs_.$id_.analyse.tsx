@@ -103,7 +103,7 @@ export const Route = createFileRoute("/_authenticated/matchs_/$id_/analyse")({
   notFoundComponent: () => <div className="p-6">Match introuvable.</div>,
 });
 
-type IndivSortKey = "name" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
+type IndivSortKey = "name" | "essais" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
 
 function AnalysePage() {
   const { id } = Route.useParams();
@@ -1144,6 +1144,7 @@ function AnalysePage() {
                 return {
                   number: pl.number,
                   name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
+                  essais: s?.essais ?? 0,
                   points: s?.points ?? 0,
                   blanc: s?.cartonsBlanc ?? 0,
                   jaune: s?.cartonsJaune ?? 0,
@@ -1151,7 +1152,7 @@ function AnalysePage() {
                   rouge: s?.cartonsRouge ?? 0,
                 };
               })
-              .filter((r) => r.points > 0 || r.blanc > 0 || r.jaune > 0 || r.bleu > 0 || r.rouge > 0)
+              .filter((r) => r.essais > 0 || r.points > 0 || r.blanc > 0 || r.jaune > 0 || r.bleu > 0 || r.rouge > 0)
               .sort((a, b) => {
                 const dir = indivSortDir === "asc" ? 1 : -1;
                 if (indivSortKey === "name") return dir * a.name.localeCompare(b.name);
@@ -1178,6 +1179,7 @@ function AnalysePage() {
                       <thead>
                         <tr className="border-b">
                           <Th k="name" label="Joueur" />
+                          <Th k="essais" label="Essais" />
                           <Th k="points" label="Pts" />
                           <Th k="blanc" label="Blanc" />
                           <Th k="jaune" label="Jaune" />
@@ -1191,6 +1193,7 @@ function AnalysePage() {
                             <td className="py-1.5 font-medium">
                               <span className="mr-1.5 text-xs text-muted-foreground">n°{r.number}</span>{r.name}
                             </td>
+                            <td className="pr-4">{r.essais || "—"}</td>
                             <td className="pr-4">{r.points || "—"}</td>
                             <td className="pr-4">{r.blanc || "—"}</td>
                             <td className="pr-4">{r.jaune || "—"}</td>

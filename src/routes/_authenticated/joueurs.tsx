@@ -163,7 +163,7 @@ function PlayerDialog({
   );
 }
 
-type StatsSortKey = "name" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
+type StatsSortKey = "name" | "essais" | "points" | "blanc" | "jaune" | "bleu" | "rouge";
 
 function JoueursPage() {
   const { canEdit, isCoach, coachCategories } = useAuth();
@@ -241,7 +241,7 @@ function JoueursPage() {
         const { data: playerList } = await playerQuery;
         return (playerList ?? []).map((pl: Player) => ({
           ...pl,
-          stats: { points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 },
+          stats: { essais: 0, points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 },
         }));
       }
 
@@ -266,7 +266,7 @@ function JoueursPage() {
       const { data: playerList } = await playerQuery;
 
       // Step 5: aggregate per player_id via match_players lookup
-      const agg: Record<string, { points: number; blanc: number; jaune: number; bleu: number; rouge: number }> = {};
+      const agg: Record<string, { essais: number; points: number; blanc: number; jaune: number; bleu: number; rouge: number }> = {};
 
       const POINT_VALUES: Record<string, number> = {
         essai: 5,
@@ -286,7 +286,7 @@ function JoueursPage() {
         );
         if (!mp?.player_id) continue;
         const pid = mp.player_id;
-        if (!agg[pid]) agg[pid] = { points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 };
+        if (!agg[pid]) agg[pid] = { essais: 0, points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 };
 
         if (ev.event_type === "points") {
           const kind = (ev.payload as Record<string, unknown>)?.kind ?? "";
@@ -295,6 +295,7 @@ function JoueursPage() {
           if (!isKick || reussi) {
             agg[pid].points += POINT_VALUES[kind as string] ?? 0;
           }
+          if (kind === "essai") agg[pid].essais += 1;
         }
 
         if (ev.event_type === "carton") {
@@ -308,7 +309,7 @@ function JoueursPage() {
 
       return (playerList ?? []).map((pl: Player) => ({
         ...pl,
-        stats: agg[pl.id] ?? { points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 },
+        stats: agg[pl.id] ?? { essais: 0, points: 0, blanc: 0, jaune: 0, bleu: 0, rouge: 0 },
       }));
     },
   });
@@ -327,7 +328,7 @@ function JoueursPage() {
   const championships = championshipsQ.data ?? [];
 
   type PlayerWithStats = Player & {
-    stats: { points: number; blanc: number; jaune: number; bleu: number; rouge: number };
+    stats: { essais: number; points: number; blanc: number; jaune: number; bleu: number; rouge: number };
   };
 
   const filteredStats = ((statsQ.data ?? []) as PlayerWithStats[]).filter((p) => {
@@ -524,6 +525,12 @@ function JoueursPage() {
                         </th>
                         <th
                           className="cursor-pointer select-none pb-2 pr-4 text-right font-medium hover:text-foreground"
+                          onClick={() => handleSortClick("essais")}
+                        >
+                          Essais{sortIndicator("essais")}
+                        </th>
+                        <th
+                          className="cursor-pointer select-none pb-2 pr-4 text-right font-medium hover:text-foreground"
                           onClick={() => handleSortClick("points")}
                         >
                           Pts{sortIndicator("points")}
@@ -563,6 +570,9 @@ function JoueursPage() {
                             {p.nickname && (
                               <span className="ml-1 text-xs text-muted-foreground">« {p.nickname} »</span>
                             )}
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums">
+                            {p.stats.essais > 0 ? p.stats.essais : "—"}
                           </td>
                           <td className="py-2 pr-4 text-right tabular-nums">
                             {p.stats.points > 0 ? p.stats.points : "—"}
