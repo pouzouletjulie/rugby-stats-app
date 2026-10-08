@@ -428,6 +428,41 @@ function AnalysePage() {
   const meudonBO = meudonEssais - advEssais >= 3;
   const adversaireBO = advEssais - meudonEssais >= 3;
 
+  const handleExportPdf = () => {
+    if (!match) { window.print(); return; }
+
+    const d = new Date(match.match_date);
+    const dateStr =
+      d.getFullYear().toString() +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      String(d.getDate()).padStart(2, "0");
+
+    const opponentSlug = (match.opponent ?? "ADVERSAIRE")
+      .toUpperCase()
+      .replace(/\s+/g, "_");
+
+    const isHome = match.location !== "Extérieur";
+    const homeTeam = isHome ? "ASM" : opponentSlug;
+    const awayTeam = isHome ? opponentSlug : "ASM";
+
+    const categoryMap: Record<string, string> = {
+      senior1: "PREMIERE",
+      senior_reserve: "RESERVE",
+      cadet: "CADETS",
+      feminine: "FEMININES",
+      junior: "JUNIORS",
+    };
+    const category =
+      categoryMap[match.team ?? ""] ?? (match.team ?? "").toUpperCase();
+
+    const filename = `${dateStr}_${homeTeam}-${awayTeam}-${category}`;
+
+    const prevTitle = document.title;
+    document.title = filename;
+    window.print();
+    document.title = prevTitle;
+  };
+
   if (matchQ.isLoading) return <AppShell><p className="text-sm text-muted-foreground">Chargement…</p></AppShell>;
 
   return (
@@ -443,7 +478,7 @@ function AnalysePage() {
           variant="outline"
           size="sm"
           className="ml-auto"
-          onClick={() => window.print()}
+          onClick={handleExportPdf}
         >
           <Printer className="size-4" /> Exporter PDF
         </Button>
