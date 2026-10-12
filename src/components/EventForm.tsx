@@ -28,7 +28,7 @@ export type EventDraft = {
   payload: Record<string, unknown>;
 };
 
-type Option = { value: string; label: string };
+type Option = { value: string; label: string; group?: string };
 
 type FieldDef =
   | { k: "team"; label?: string }
@@ -38,6 +38,20 @@ type FieldDef =
   | { k: "switch"; key: string; label: string };
 
 const opts = (values: readonly string[]): Option[] => values.map((v) => ({ value: v, label: v }));
+
+const PENALTY_MOTIF_GROUPS: Record<string, string> = {
+  plaquage_haut: "Plaquage", plaquage_a_deux: "Plaquage", plaquage_air: "Plaquage",
+  cathedrale: "Plaquage", plaquage_sans_ballon: "Plaquage", plaquage_retardement: "Plaquage", cuillere: "Plaquage",
+  plaqueur_ruck: "Sur ruck", plaqueur_lache_pas: "Sur ruck", perte_appui: "Sur ruck",
+  grattage_illicite: "Sur ruck", joueur_roule: "Sur ruck", balle_gardee_sol: "Sur ruck", joueur_entre_cote: "Sur ruck",
+  hors_jeu_defensif: "Jeu courant", hors_jeu_coup_pied: "Jeu courant", hors_jeu: "Jeu courant",
+  ecran_passage_vide: "Jeu courant", ecroule_maul: "Jeu courant", maul_injouable: "Jeu courant",
+  rentre_cote_maul: "Jeu courant", en_avant_volontaire: "Jeu courant", pas_dix_metres: "Jeu courant",
+  saute_avant: "Conquête", touche_bras_adversaire: "Conquête", moins_5m: "Conquête",
+  non_respect_couloir: "Conquête", pousse_avant: "Conquête", ne_talonne_pas: "Conquête",
+  talonnage_main: "Conquête", ecroule: "Conquête",
+  dix_metres_plus: "Discipline",
+};
 
 export function fieldsFor(type: string, payload?: Record<string, unknown>, teamSide?: string | null): FieldDef[] {
   switch (type) {
@@ -118,7 +132,7 @@ export function fieldsFor(type: string, payload?: Record<string, unknown>, teamS
           k: "select",
           key: "motif",
           label: "Motif",
-          options: PENALTY_MOTIFS.filter((m) => m.value !== "melee"),
+          options: PENALTY_MOTIFS.filter((m) => m.value !== "melee").map((m) => ({ ...m, group: PENALTY_MOTIF_GROUPS[m.value] })),
         });
       }
       if (teamSide === "adversaire") {
@@ -337,26 +351,53 @@ function BtnGroup({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const hasGroups = options.some((o) => o.group);
+
+  const groups: Array<{ name: string | undefined; items: readonly Option[] }> = [];
+  if (hasGroups) {
+    let current: string | undefined = undefined;
+    for (const opt of options) {
+      if (opt.group !== current) {
+        current = opt.group;
+        groups.push({ name: current, items: [] });
+      }
+      groups[groups.length - 1].items = [...groups[groups.length - 1].items, opt];
+    }
+  }
+
+  const renderBtn = (opt: Option) => (
+    <button
+      key={opt.value}
+      type="button"
+      onClick={() => onChange(opt.value)}
+      className={cn(
+        "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+        value === opt.value
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-background hover:bg-accent/10",
+      )}
+    >
+      {opt.label}
+    </button>
+  );
+
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
-              value === opt.value
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background hover:bg-accent/10",
-            )}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+      {hasGroups ? (
+        <div className="space-y-2">
+          {groups.map(({ name, items }) => (
+            <div key={name ?? "_"}>
+              {name && (
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">{name}</p>
+              )}
+              <div className="flex flex-wrap gap-1.5">{items.map(renderBtn)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">{options.map(renderBtn)}</div>
+      )}
     </div>
   );
 }

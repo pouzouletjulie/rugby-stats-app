@@ -104,22 +104,45 @@ export const PENALTY_CHOICES = [
   { value: "autre", label: "Autre" },
 ] as const;
 export const PENALTY_MOTIFS = [
+  // Plaquage
   { value: "plaquage_haut", label: "Plaquage haut" },
   { value: "plaquage_a_deux", label: "Plaquage à deux" },
   { value: "plaquage_air", label: "Plaquage en l'air" },
-  { value: "saute_avant", label: "Saute avant" },
   { value: "cathedrale", label: "Cathédrale" },
+  { value: "plaquage_sans_ballon", label: "Plaquage sans ballon" },
+  { value: "plaquage_retardement", label: "Plaquage à retardement" },
+  { value: "cuillere", label: "Cuillère" },
+  // Sur ruck
+  { value: "plaqueur_ruck", label: "Plaqueur sort pas" },
+  { value: "plaqueur_lache_pas", label: "Plaqueur/assistant lâche pas" },
+  { value: "perte_appui", label: "Perte d'appui soutient" },
+  { value: "grattage_illicite", label: "Grattage illicite" },
+  { value: "joueur_roule", label: "Joueur qui roule" },
   { value: "balle_gardee_sol", label: "Balle gardée au sol" },
-  { value: "talonnage_main", label: "Talonnage à la main" },
-  { value: "melee", label: "Mêlée" },
+  { value: "joueur_entre_cote", label: "Joueur qui entre sur le côté" },
+  // Jeu courant
+  { value: "hors_jeu_defensif", label: "Hors-jeu défensif" },
+  { value: "hors_jeu_coup_pied", label: "Hors-jeu coup de pied" },
   { value: "hors_jeu", label: "Hors-jeu" },
-  { value: "perte_appui", label: "Perte d'appui" },
-  { value: "plaqueur_ruck", label: "Plaqueur dans le ruck" },
-  { value: "plaqueur_lache_pas", label: "Plaqueur qui ne lâche pas" },
+  { value: "ecran_passage_vide", label: "Écran / passage à vide" },
   { value: "ecroule_maul", label: "Écroule le maul" },
+  { value: "maul_injouable", label: "Maul injouable" },
+  { value: "rentre_cote_maul", label: "Rentre côté du maul" },
   { value: "en_avant_volontaire", label: "En-avant volontaire" },
-  { value: "dix_metres_plus", label: "10m de plus" },
   { value: "pas_dix_metres", label: "Pas à 10m" },
+  // Conquête
+  { value: "saute_avant", label: "Saute avant" },
+  { value: "touche_bras_adversaire", label: "Touche bras adversaire" },
+  { value: "moins_5m", label: "Moins de 5m" },
+  { value: "non_respect_couloir", label: "Non respect du couloir" },
+  { value: "pousse_avant", label: "Pousse avant" },
+  { value: "ne_talonne_pas", label: "Ne talonne pas" },
+  { value: "talonnage_main", label: "Talonnage à la main" },
+  { value: "ecroule", label: "Écroule" },
+  // Discipline
+  { value: "dix_metres_plus", label: "10m de plus" },
+  // Autre
+  { value: "melee", label: "Mêlée" },
   { value: "autre", label: "Autre faute" },
 ] as const;
 export const CARD_COLORS = [
