@@ -33,6 +33,14 @@ const ZONE_COLORS = [
 
 const ZONE_SHORT = ["Nos 5m", "Nos 22m", "Nôtre ½", "Milieu", "Leur ½", "Leurs 22m", "Leurs 5m"];
 
+const PENAL_CATS: Array<{ label: string; values: string[] }> = [
+  { label: "Plaquage", values: ["plaquage_haut", "plaquage_a_deux", "plaquage_air", "cathedrale", "plaquage_sans_ballon", "plaquage_retardement", "cuillere"] },
+  { label: "Sur ruck", values: ["plaqueur_ruck", "plaqueur_lache_pas", "perte_appui", "grattage_illicite", "joueur_roule", "balle_gardee_sol", "joueur_entre_cote"] },
+  { label: "Jeu courant", values: ["hors_jeu_defensif", "hors_jeu_coup_pied", "hors_jeu", "ecran_passage_vide", "ecroule_maul", "maul_injouable", "rentre_cote_maul", "en_avant_volontaire", "pas_dix_metres"] },
+  { label: "Conquête", values: ["saute_avant", "touche_bras_adversaire", "moins_5m", "non_respect_couloir", "pousse_avant", "ne_talonne_pas", "talonnage_main", "ecroule"] },
+  { label: "Discipline", values: ["dix_metres_plus"] },
+];
+
 function FieldZoneBar({
   meudon,
   adversaire,
@@ -713,24 +721,44 @@ function AnalysePage() {
                   <CardTitle className="text-sm uppercase">Par motif</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                        <th className="py-2">Motif</th>
-                        <th className="py-2 text-right">Nb</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {penaltyBreakdown.byMotif.map(({ motif, count }) => (
-                        <tr key={motif} className="border-b last:border-0">
-                          <td className="py-1.5">
-                            {PENALTY_MOTIFS.find((m) => m.value === motif)?.label ?? motif}
-                          </td>
-                          <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {(() => {
+                    const byMotifMap = new Map(penaltyBreakdown.byMotif.map(({ motif, count }) => [motif, count]));
+                    const categorised = new Set<string>();
+                    const sections = PENAL_CATS.map(({ label, values }) => {
+                      const rows = values
+                        .filter((v) => byMotifMap.has(v))
+                        .map((v) => ({ motif: v, count: byMotifMap.get(v)! }));
+                      rows.forEach((r) => categorised.add(r.motif));
+                      return { label, rows };
+                    }).filter((s) => s.rows.length > 0);
+                    const other = penaltyBreakdown.byMotif.filter(({ motif }) => !categorised.has(motif));
+                    if (other.length > 0) sections.push({ label: "Autre", rows: other });
+                    return (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                            <th className="py-2">Motif</th>
+                            <th className="py-2 text-right">Nb</th>
+                          </tr>
+                        </thead>
+                        {sections.map(({ label, rows }, si) => (
+                          <tbody key={label}>
+                            <tr className={si > 0 ? "border-t" : ""}>
+                              <td colSpan={2} className="pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</td>
+                            </tr>
+                            {rows.map(({ motif, count }) => (
+                              <tr key={motif} className="border-b last:border-0">
+                                <td className="py-1.5 pl-3">
+                                  {PENALTY_MOTIFS.find((m) => m.value === motif)?.label ?? motif}
+                                </td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        ))}
+                      </table>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>
