@@ -120,8 +120,8 @@ export const PENALTY_MOTIFS = [
   { value: "joueur_roule", label: "Joueur qui roule" },
   { value: "balle_gardee_sol", label: "Balle gardée au sol" },
   { value: "joueur_entre_cote", label: "Joueur qui entre sur le côté" },
+  { value: "talonnage_main", label: "Talonnage à la main" },
   // Jeu courant
-  { value: "hors_jeu_defensif", label: "Hors-jeu défensif" },
   { value: "hors_jeu_coup_pied", label: "Hors-jeu coup de pied" },
   { value: "hors_jeu", label: "Hors-jeu" },
   { value: "ecran_passage_vide", label: "Écran / passage à vide" },
@@ -137,7 +137,6 @@ export const PENALTY_MOTIFS = [
   { value: "non_respect_couloir", label: "Non respect du couloir" },
   { value: "pousse_avant", label: "Pousse avant" },
   { value: "ne_talonne_pas", label: "Ne talonne pas" },
-  { value: "talonnage_main", label: "Talonnage à la main" },
   { value: "ecroule", label: "Écroule" },
   // Discipline
   { value: "dix_metres_plus", label: "10m de plus" },

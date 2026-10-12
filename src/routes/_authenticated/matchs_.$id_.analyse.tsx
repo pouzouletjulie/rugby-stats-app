@@ -35,9 +35,9 @@ const ZONE_SHORT = ["Nos 5m", "Nos 22m", "Nôtre ½", "Milieu", "Leur ½", "Leur
 
 const PENAL_CATS: Array<{ label: string; values: string[] }> = [
   { label: "Plaquage", values: ["plaquage_haut", "plaquage_a_deux", "plaquage_air", "cathedrale", "plaquage_sans_ballon", "plaquage_retardement", "cuillere"] },
-  { label: "Sur ruck", values: ["plaqueur_ruck", "plaqueur_lache_pas", "perte_appui", "grattage_illicite", "joueur_roule", "balle_gardee_sol", "joueur_entre_cote"] },
-  { label: "Jeu courant", values: ["hors_jeu_defensif", "hors_jeu_coup_pied", "hors_jeu", "ecran_passage_vide", "ecroule_maul", "maul_injouable", "rentre_cote_maul", "en_avant_volontaire", "pas_dix_metres"] },
-  { label: "Conquête", values: ["saute_avant", "touche_bras_adversaire", "moins_5m", "non_respect_couloir", "pousse_avant", "ne_talonne_pas", "talonnage_main", "ecroule"] },
+  { label: "Sur ruck", values: ["plaqueur_ruck", "plaqueur_lache_pas", "perte_appui", "grattage_illicite", "joueur_roule", "balle_gardee_sol", "joueur_entre_cote", "talonnage_main"] },
+  { label: "Jeu courant", values: ["hors_jeu_coup_pied", "hors_jeu", "ecran_passage_vide", "ecroule_maul", "maul_injouable", "rentre_cote_maul", "en_avant_volontaire", "pas_dix_metres"] },
+  { label: "Conquête", values: ["saute_avant", "touche_bras_adversaire", "moins_5m", "non_respect_couloir", "pousse_avant", "ne_talonne_pas", "ecroule"] },
   { label: "Discipline", values: ["dix_metres_plus"] },
 ];
 
@@ -172,7 +172,7 @@ function AnalysePage() {
   });
 
   const match = matchQ.data;
-  if (match && notes === null) setNotes(((match as Record<string, unknown>)["notes"] as string) ?? "");
+  if (match && notes === null) setNotes(((match as Record<string, unknown>)["notes"] as string) ?? "3 points positifs : \n3 points négatifs : \nAxe de travail le plus important : ");
   const players = playersQ.data ?? [];
   const events = eventsQ.data ?? [];
   const stats = useMemo(() => computeStats(events), [events]);

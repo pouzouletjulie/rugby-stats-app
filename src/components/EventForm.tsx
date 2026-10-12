@@ -43,13 +43,13 @@ const PENALTY_MOTIF_GROUPS: Record<string, string> = {
   plaquage_haut: "Plaquage", plaquage_a_deux: "Plaquage", plaquage_air: "Plaquage",
   cathedrale: "Plaquage", plaquage_sans_ballon: "Plaquage", plaquage_retardement: "Plaquage", cuillere: "Plaquage",
   plaqueur_ruck: "Sur ruck", plaqueur_lache_pas: "Sur ruck", perte_appui: "Sur ruck",
-  grattage_illicite: "Sur ruck", joueur_roule: "Sur ruck", balle_gardee_sol: "Sur ruck", joueur_entre_cote: "Sur ruck",
-  hors_jeu_defensif: "Jeu courant", hors_jeu_coup_pied: "Jeu courant", hors_jeu: "Jeu courant",
+  grattage_illicite: "Sur ruck", joueur_roule: "Sur ruck", balle_gardee_sol: "Sur ruck",
+  joueur_entre_cote: "Sur ruck", talonnage_main: "Sur ruck",
+  hors_jeu_coup_pied: "Jeu courant", hors_jeu: "Jeu courant",
   ecran_passage_vide: "Jeu courant", ecroule_maul: "Jeu courant", maul_injouable: "Jeu courant",
   rentre_cote_maul: "Jeu courant", en_avant_volontaire: "Jeu courant", pas_dix_metres: "Jeu courant",
   saute_avant: "Conquête", touche_bras_adversaire: "Conquête", moins_5m: "Conquête",
-  non_respect_couloir: "Conquête", pousse_avant: "Conquête", ne_talonne_pas: "Conquête",
-  talonnage_main: "Conquête", ecroule: "Conquête",
+  non_respect_couloir: "Conquête", pousse_avant: "Conquête", ne_talonne_pas: "Conquête", ecroule: "Conquête",
   dix_metres_plus: "Discipline",
 };
 
