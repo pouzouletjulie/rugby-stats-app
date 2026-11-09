@@ -1153,97 +1153,100 @@ function AnalysePage() {
 
           {/* ── CHANDELLE / BOX KICK ── */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Jeu au pied de pression — AS Meudon</h3>
-            <Card>
-              <CardContent className="pt-4">
-                <table className="w-full text-sm">
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="py-1.5">Volume</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.pressionKick.total}</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-1.5">Récupéré</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.pressionKick.recupere, japTroisQuarts.pressionKick.recupereBase)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1.5">Gain de terrain</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.pressionKick.gainTerrain, japTroisQuarts.pressionKick.gainTerrainBase)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Jeu au pied de pression/occupation — AS Meudon</h3>
+            {(() => {
+              const PRESSION_KINDS = [
+                { value: "chandelle", label: "Chandelle", hasRecupere: true },
+                { value: "box_kick", label: "Box kick", hasRecupere: true },
+                { value: "par_dessus", label: "Par dessus", hasRecupere: true },
+                { value: "rasant", label: "Rasant", hasRecupere: false },
+                { value: "renvoi_22", label: "Renvoi 22", hasRecupere: true },
+                { value: "renvoi_enbut", label: "Renvoi en but", hasRecupere: true },
+              ];
+              type KindStat = { count: number; recupere: number; recupereBase: number; gainTerrain: number };
+              const kindStats: Record<string, KindStat> = {};
+              for (const e of events) {
+                if (e.deleted_at || e.event_type !== "jeu_au_pied" || e.team_side !== "meudon") continue;
+                const k = String(e.payload?.["kind"] ?? "");
+                const def = PRESSION_KINDS.find((x) => x.value === k);
+                if (!def) continue;
+                const s = kindStats[k] ?? { count: 0, recupere: 0, recupereBase: 0, gainTerrain: 0 };
+                s.count += 1;
+                if (def.hasRecupere) {
+                  s.recupereBase += 1;
+                  if (e.payload?.["recupere"] === true) s.recupere += 1;
+                }
+                if (e.payload?.["gain_terrain"] === true) s.gainTerrain += 1;
+                kindStats[k] = s;
+              }
+              const usedKinds = PRESSION_KINDS.filter((k) => kindStats[k.value]);
+              if (!usedKinds.length) return null;
+              return (
+                <>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm uppercase">Volume par type</CardTitle></CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Type</th>
+                            <th className="py-2 text-right text-xs uppercase text-muted-foreground">Nb</th>
+                          </tr>
+                        </thead>
+                        <tbody className="tabular-nums">
+                          {usedKinds.map((k) => (
+                            <tr key={k.value} className="border-b last:border-0">
+                              <td className="py-1.5">{k.label}</td>
+                              <td className="py-1.5 text-right font-semibold">{kindStats[k.value].count}</td>
+                            </tr>
+                          ))}
+                          <tr>
+                            <td className="py-1.5 font-medium">Total</td>
+                            <td className="py-1.5 text-right font-bold">{japTroisQuarts.pressionKick.total}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm uppercase">% Balle récupérée / Gain terrain</CardTitle></CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Type</th>
+                            <th className="py-2 pr-4 text-right text-xs uppercase text-muted-foreground whitespace-nowrap">Récupérée</th>
+                            <th className="py-2 text-right text-xs uppercase text-muted-foreground whitespace-nowrap">Gain terrain</th>
+                          </tr>
+                        </thead>
+                        <tbody className="tabular-nums">
+                          {usedKinds.map((k) => {
+                            const s = kindStats[k.value];
+                            return (
+                              <tr key={k.value} className="border-b last:border-0">
+                                <td className="py-1.5">{k.label}</td>
+                                <td className="py-1.5 pr-4 text-right font-semibold">
+                                  {k.hasRecupere ? pct(s.recupere, s.recupereBase) : "—"}
+                                </td>
+                                <td className="py-1.5 text-right font-semibold">
+                                  {pct(s.gainTerrain, s.count)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                </>
+              );
+            })()}
             <Card>
               <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
               <CardContent>
                 <FieldZoneBar meudon={japTroisQuarts.pressionKick.parZone} adversaire={{}} />
               </CardContent>
             </Card>
-            {(() => {
-              const PRESSION_KINDS = [
-                { value: "chandelle", label: "Chandelle" },
-                { value: "box_kick", label: "Box kick" },
-                { value: "par_dessus", label: "Par dessus" },
-                { value: "rasant", label: "Rasant" },
-                { value: "renvoi_22", label: "Renvoi 22" },
-                { value: "renvoi_enbut", label: "Renvoi en but" },
-              ];
-              const counts = new Map<number, Record<string, number>>();
-              for (const e of events) {
-                if (e.deleted_at || e.event_type !== "jeu_au_pied" || e.team_side !== "meudon") continue;
-                const kind = String(e.payload?.["kind"] ?? "");
-                if (!PRESSION_KINDS.find((k) => k.value === kind) || !e.player_number) continue;
-                const row = counts.get(e.player_number) ?? {};
-                row[kind] = (row[kind] ?? 0) + 1;
-                counts.set(e.player_number, row);
-              }
-              if (!counts.size) return null;
-              const usedKinds = PRESSION_KINDS.filter((k) =>
-                [...counts.values()].some((r) => (r[k.value] ?? 0) > 0)
-              );
-              const rows = [...counts.entries()]
-                .map(([num, kindCounts]) => {
-                  const p = players.find((x) => x.number === num);
-                  const name = p
-                    ? [p.first_name, p.last_name].filter(Boolean).join(" ") || `n°${num}`
-                    : `n°${num}`;
-                  const total = Object.values(kindCounts).reduce((s, v) => s + v, 0);
-                  return { num, name, kindCounts, total };
-                })
-                .sort((a, b) => b.total - a.total);
-              return (
-                <Card>
-                  <CardHeader><CardTitle className="text-sm uppercase">Détail par joueur</CardTitle></CardHeader>
-                  <CardContent className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
-                          {usedKinds.map((k) => (
-                            <th key={k.value} className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground whitespace-nowrap">{k.label}</th>
-                          ))}
-                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="tabular-nums">
-                        {rows.map((r) => (
-                          <tr key={r.num} className="border-b last:border-0">
-                            <td className="py-1.5 font-medium">
-                              <span className="mr-1.5 text-xs text-muted-foreground">n°{r.num}</span>{r.name}
-                            </td>
-                            {usedKinds.map((k) => (
-                              <td key={k.value} className="py-1.5 pr-4">{r.kindCounts[k.value] || "—"}</td>
-                            ))}
-                            <td className="py-1.5 pr-4 font-semibold">{r.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </CardContent>
-                </Card>
-              );
-            })()}
           </div>
 
           {/* ── RENVOI ── */}
