@@ -1372,7 +1372,7 @@ function AnalysePage() {
 
             return (
               <Card className="mt-4">
-                <CardHeader><CardTitle className="uppercase">Plaquages</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="uppercase">Plaquages — {plaqRows.reduce((s, r) => s + r.plaquages, 0)}</CardTitle></CardHeader>
                 <CardContent className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
