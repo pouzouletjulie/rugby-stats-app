@@ -277,6 +277,61 @@ const EVENT_GROUPS = [
   },
 ];
 
+function PlaquageEditForm({
+  events,
+  players,
+  editing,
+  onSave,
+  onCancel,
+}: {
+  events: MatchEvent[];
+  players: MatchPlayer[];
+  editing: MatchEvent;
+  onSave: (player: number | null, volume: number) => void;
+  onCancel: () => void;
+}) {
+  const initialVolume = events.filter(
+    (e) => !e.deleted_at && e.event_type === "plaquage"
+      && e.player_number === editing.player_number
+      && e.period === editing.period,
+  ).length;
+
+  const [player, setPlayer] = useState<number | null>(editing.player_number);
+  const [volume, setVolume] = useState(Math.max(1, initialVolume));
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label>Joueur</Label>
+        <Select value={player !== null ? String(player) : ""} onValueChange={(v) => setPlayer(Number(v))}>
+          <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+          <SelectContent>
+            {players.map((p) => (
+              <SelectItem key={p.number} value={String(p.number)}>
+                n°{p.number} {[p.first_name, p.last_name].filter(Boolean).join(" ") || `n°${p.number}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Nombre de plaquages</Label>
+        <Input
+          type="number"
+          min={0}
+          value={volume}
+          onChange={(e) => setVolume(Math.max(0, Number(e.target.value)))}
+          className="w-28 text-center"
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={onCancel}>Annuler</Button>
+        <Button size="sm" onClick={() => onSave(player, volume)}>Enregistrer la correction</Button>
+      </div>
+    </div>
+  );
+}
+
 function MatchPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -486,6 +541,45 @@ function MatchPage() {
     setBulkPlayer(null);
     setBulkVolume(0);
     refresh();
+  };
+
+  const savePlaquageGroupEdit = async (
+    origPlayer: number | null,
+    origPeriod: string | null,
+    newPlayer: number | null,
+    newVolume: number,
+  ) => {
+    if (!editable) return;
+    const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+    const toDelete = events.filter(
+      (e) => !e.deleted_at && e.event_type === "plaquage"
+        && e.player_number === origPlayer
+        && e.period === origPeriod,
+    );
+    await Promise.all(
+      toDelete.map((e) =>
+        supabase.from("match_events").update({
+          deleted_at: new Date().toISOString(),
+          deleted_by: uid,
+        }).eq("id", e.id),
+      ),
+    );
+    if (newVolume > 0 && newPlayer !== null) {
+      const rows = Array.from({ length: newVolume }, () => ({
+        match_id: id,
+        period: origPeriod,
+        event_type: "plaquage",
+        team_side: "meudon",
+        player_number: newPlayer,
+        payload: {},
+        created_by: uid,
+      }));
+      const { error } = await supabase.from("match_events").insert(rows);
+      if (error) { toast.error(error.message); return; }
+    }
+    setEditing(null);
+    refresh();
+    toast.success("Plaquages mis à jour");
   };
 
   const updateEvent = async (ev: MatchEvent, draft: EventDraft) => {
@@ -811,7 +905,7 @@ function MatchPage() {
                           <SelectContent>
                             {players.map((p) => (
                               <SelectItem key={p.number} value={String(p.number)}>
-                                {[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                                n°{p.number} {[p.first_name, p.last_name].filter(Boolean).join(" ")}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1009,7 +1103,17 @@ function MatchPage() {
           <DialogHeader>
             <DialogTitle>Corriger l'événement</DialogTitle>
           </DialogHeader>
-          {editing && (
+          {editing && editing.event_type === "plaquage" ? (
+            <PlaquageEditForm
+              events={events}
+              players={players}
+              editing={editing}
+              onSave={(newPlayer, newVolume) =>
+                savePlaquageGroupEdit(editing.player_number, editing.period, newPlayer, newVolume)
+              }
+              onCancel={() => setEditing(null)}
+            />
+          ) : editing ? (
             <EventForm
               type={editing.event_type}
               players={players}
@@ -1018,7 +1122,7 @@ function MatchPage() {
               onSubmit={(draft) => updateEvent(editing, draft)}
               onCancel={() => setEditing(null)}
             />
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
     </AppShell>
