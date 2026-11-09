@@ -41,7 +41,6 @@ import {
   eventSummary,
   periodLabel,
   periodStarted,
-  playerName,
   teamLabel,
   type Championship,
   type MatchEvent,
@@ -291,7 +290,6 @@ function MatchPage() {
   const [confirmResetEvents, setConfirmResetEvents] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkPlayer, setBulkPlayer] = useState<number | null>(null);
-  const [bulkPeriod, setBulkPeriod] = useState<string>("");
   const [bulkVolume, setBulkVolume] = useState(0);
 
   const matchQ = useQuery({
@@ -468,14 +466,13 @@ function MatchPage() {
 
   const bulkInsertPlaquages = async () => {
     if (!editable) return;
-    const targetPeriod = bulkPeriod || period;
-    if (!targetPeriod) { toast.error("Sélectionnez une mi-temps"); return; }
+    if (!period) { toast.error("Activez d'abord une période"); return; }
     if (bulkPlayer === null) { toast.error("Sélectionnez un joueur"); return; }
     if (bulkVolume <= 0) { toast.error("Entrez au moins un plaquage"); return; }
     const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
     const rows = Array.from({ length: bulkVolume }, () => ({
       match_id: id,
-      period: targetPeriod,
+      period,
       event_type: "plaquage",
       team_side: "meudon",
       player_number: bulkPlayer,
@@ -487,7 +484,6 @@ function MatchPage() {
     toast.success(`${bulkVolume} plaquage${bulkVolume > 1 ? "s" : ""} enregistré${bulkVolume > 1 ? "s" : ""}`);
     setBulkOpen(false);
     setBulkPlayer(null);
-    setBulkPeriod("");
     setBulkVolume(0);
     refresh();
   };
@@ -805,34 +801,21 @@ function MatchPage() {
                   {bulkOpen && group.label === "Individuel" && (
                     <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
                       <p className="font-display text-sm font-semibold uppercase text-primary">Saisie rapide — plaquages</p>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label>Joueur</Label>
-                          <Select
-                            value={bulkPlayer !== null ? String(bulkPlayer) : ""}
-                            onValueChange={(v) => setBulkPlayer(Number(v))}
-                          >
-                            <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
-                            <SelectContent>
-                              {players.map((p) => (
-                                <SelectItem key={p.number} value={String(p.number)}>
-                                  n°{p.number} {playerName(p)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label>Mi-temps</Label>
-                          <Select value={bulkPeriod} onValueChange={setBulkPeriod}>
-                            <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
-                            <SelectContent>
-                              {PERIODS.map((p) => (
-                                <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      <div className="space-y-1">
+                        <Label>Joueur</Label>
+                        <Select
+                          value={bulkPlayer !== null ? String(bulkPlayer) : ""}
+                          onValueChange={(v) => setBulkPlayer(Number(v))}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+                          <SelectContent>
+                            {players.map((p) => (
+                              <SelectItem key={p.number} value={String(p.number)}>
+                                {[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1">
                         <Label>Nombre de plaquages</Label>
