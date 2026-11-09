@@ -1181,24 +1181,37 @@ function AnalysePage() {
               </CardContent>
             </Card>
             {(() => {
-              const PRESSION_KINDS = ["chandelle", "box_kick", "par_dessus", "rasant", "renvoi_22", "renvoi_enbut"];
-              const counts = new Map<number, number>();
+              const PRESSION_KINDS = [
+                { value: "chandelle", label: "Chandelle" },
+                { value: "box_kick", label: "Box kick" },
+                { value: "par_dessus", label: "Par dessus" },
+                { value: "rasant", label: "Rasant" },
+                { value: "renvoi_22", label: "Renvoi 22" },
+                { value: "renvoi_enbut", label: "Renvoi en but" },
+              ];
+              const counts = new Map<number, Record<string, number>>();
               for (const e of events) {
                 if (e.deleted_at || e.event_type !== "jeu_au_pied" || e.team_side !== "meudon") continue;
                 const kind = String(e.payload?.["kind"] ?? "");
-                if (!PRESSION_KINDS.includes(kind) || !e.player_number) continue;
-                counts.set(e.player_number, (counts.get(e.player_number) ?? 0) + 1);
+                if (!PRESSION_KINDS.find((k) => k.value === kind) || !e.player_number) continue;
+                const row = counts.get(e.player_number) ?? {};
+                row[kind] = (row[kind] ?? 0) + 1;
+                counts.set(e.player_number, row);
               }
               if (!counts.size) return null;
+              const usedKinds = PRESSION_KINDS.filter((k) =>
+                [...counts.values()].some((r) => (r[k.value] ?? 0) > 0)
+              );
               const rows = [...counts.entries()]
-                .map(([num, vol]) => {
+                .map(([num, kindCounts]) => {
                   const p = players.find((x) => x.number === num);
                   const name = p
                     ? [p.first_name, p.last_name].filter(Boolean).join(" ") || `n°${num}`
                     : `n°${num}`;
-                  return { num, name, vol };
+                  const total = Object.values(kindCounts).reduce((s, v) => s + v, 0);
+                  return { num, name, kindCounts, total };
                 })
-                .sort((a, b) => b.vol - a.vol);
+                .sort((a, b) => b.total - a.total);
               return (
                 <Card>
                   <CardHeader><CardTitle className="text-sm uppercase">Détail par joueur</CardTitle></CardHeader>
@@ -1207,7 +1220,10 @@ function AnalysePage() {
                       <thead>
                         <tr className="border-b">
                           <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
-                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Volume</th>
+                          {usedKinds.map((k) => (
+                            <th key={k.value} className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground whitespace-nowrap">{k.label}</th>
+                          ))}
+                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Total</th>
                         </tr>
                       </thead>
                       <tbody className="tabular-nums">
@@ -1216,7 +1232,10 @@ function AnalysePage() {
                             <td className="py-1.5 font-medium">
                               <span className="mr-1.5 text-xs text-muted-foreground">n°{r.num}</span>{r.name}
                             </td>
-                            <td className="py-1.5 pr-4">{r.vol}</td>
+                            {usedKinds.map((k) => (
+                              <td key={k.value} className="py-1.5 pr-4">{r.kindCounts[k.value] || "—"}</td>
+                            ))}
+                            <td className="py-1.5 pr-4 font-semibold">{r.total}</td>
                           </tr>
                         ))}
                       </tbody>
