@@ -289,6 +289,10 @@ function MatchPage() {
   const [editingMatchInfo, setEditingMatchInfo] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmResetEvents, setConfirmResetEvents] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkPlayer, setBulkPlayer] = useState<number | null>(null);
+  const [bulkPeriod, setBulkPeriod] = useState<string>("");
+  const [bulkVolume, setBulkVolume] = useState(0);
 
   const matchQ = useQuery({
     queryKey: ["match", id],
@@ -460,6 +464,32 @@ function MatchPage() {
     }
     refresh();
     if (!silent) toast.success(`${EVENT_LABELS[draft.event_type] ?? draft.event_type} enregistré`);
+  };
+
+  const bulkInsertPlaquages = async () => {
+    if (!editable) return;
+    const targetPeriod = bulkPeriod || period;
+    if (!targetPeriod) { toast.error("Sélectionnez une mi-temps"); return; }
+    if (bulkPlayer === null) { toast.error("Sélectionnez un joueur"); return; }
+    if (bulkVolume <= 0) { toast.error("Entrez au moins un plaquage"); return; }
+    const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+    const rows = Array.from({ length: bulkVolume }, () => ({
+      match_id: id,
+      period: targetPeriod,
+      event_type: "plaquage",
+      team_side: "meudon",
+      player_number: bulkPlayer,
+      payload: {},
+      created_by: uid,
+    }));
+    const { error } = await supabase.from("match_events").insert(rows);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${bulkVolume} plaquage${bulkVolume > 1 ? "s" : ""} enregistré${bulkVolume > 1 ? "s" : ""}`);
+    setBulkOpen(false);
+    setBulkPlayer(null);
+    setBulkPeriod("");
+    setBulkVolume(0);
+    refresh();
   };
 
   const updateEvent = async (ev: MatchEvent, draft: EventDraft) => {
@@ -712,7 +742,7 @@ function MatchPage() {
                         key={t}
                         type="button"
                         disabled={!editable}
-                        onClick={() => setActiveType(activeType === t ? null : t)}
+                        onClick={() => { setActiveType(activeType === t ? null : t); setBulkOpen(false); }}
                         className={cn(
                           "rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40",
                           activeType === t
@@ -723,6 +753,21 @@ function MatchPage() {
                         {EVENT_LABELS[t]}
                       </button>
                     ))}
+                    {group.label === "Individuel" && (
+                      <button
+                        type="button"
+                        disabled={!editable}
+                        onClick={() => { setBulkOpen((v) => !v); setActiveType(null); }}
+                        className={cn(
+                          "rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40",
+                          bulkOpen
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background hover:bg-accent/10",
+                        )}
+                      >
+                        Saisie rapide
+                      </button>
+                    )}
                   </div>
                   {activeType && group.types.includes(activeType) && (
                     <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
@@ -755,6 +800,56 @@ function MatchPage() {
                         }}
                         onCancel={() => setActiveType(null)}
                       />
+                    </div>
+                  )}
+                  {bulkOpen && group.label === "Individuel" && (
+                    <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                      <p className="font-display text-sm font-semibold uppercase text-primary">Saisie rapide — plaquages</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label>Joueur</Label>
+                          <Select
+                            value={bulkPlayer !== null ? String(bulkPlayer) : ""}
+                            onValueChange={(v) => setBulkPlayer(Number(v))}
+                          >
+                            <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+                            <SelectContent>
+                              {players.map((p) => (
+                                <SelectItem key={p.number} value={String(p.number)}>
+                                  n°{p.number} {playerName(p)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Mi-temps</Label>
+                          <Select value={bulkPeriod} onValueChange={setBulkPeriod}>
+                            <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+                            <SelectContent>
+                              {PERIODS.map((p) => (
+                                <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Nombre de plaquages</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={bulkVolume}
+                          onChange={(e) => setBulkVolume(Math.max(0, Number(e.target.value)))}
+                          className="text-center w-28"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setBulkOpen(false)}>Annuler</Button>
+                        <Button size="sm" onClick={bulkInsertPlaquages}>
+                          Enregistrer ({bulkVolume} plaquage{bulkVolume > 1 ? "s" : ""})
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

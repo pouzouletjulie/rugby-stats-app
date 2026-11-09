@@ -1290,24 +1290,71 @@ function AnalysePage() {
               </Card>
             );
           })()}
+          {(() => {
+            const statsMap = new Map(stats.players.map((p) => [p.number, p]));
+            const plaqRows = [...players]
+              .map((pl) => ({
+                number: pl.number,
+                name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
+                plaquages: statsMap.get(pl.number)?.plaquages ?? 0,
+              }))
+              .filter((r) => r.plaquages > 0)
+              .sort((a, b) => b.plaquages - a.plaquages);
+
+            if (!plaqRows.length) return null;
+
+            return (
+              <Card className="mt-4">
+                <CardHeader><CardTitle className="uppercase">Plaquages</CardTitle></CardHeader>
+                <CardContent className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
+                        <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Plaquages</th>
+                      </tr>
+                    </thead>
+                    <tbody className="tabular-nums">
+                      {plaqRows.map((r) => (
+                        <tr key={r.number} className="border-b last:border-0">
+                          <td className="py-1.5 font-medium">
+                            <span className="mr-1.5 text-xs text-muted-foreground">n°{r.number}</span>{r.name}
+                          </td>
+                          <td className="py-1.5 pr-4">{r.plaquages}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </section>
 
-        <section className="analyse-section print:hidden">
+        <section className="analyse-section">
           <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Notes</h2>
           <Card>
             <CardContent className="pt-4">
-              <Textarea
-                value={notes ?? ""}
-                onChange={handleNotesChange}
-                placeholder="Notes sur le match…"
-                maxLength={500}
-                rows={5}
-                disabled={!canEditTeam(match?.team ?? "")}
-                className="resize-none"
-              />
-              <p className="mt-1.5 text-right text-xs text-muted-foreground">
-                {(notes ?? "").length} / 500
-              </p>
+              <div className="print:hidden">
+                <Textarea
+                  value={notes ?? ""}
+                  onChange={handleNotesChange}
+                  placeholder="Notes sur le match…"
+                  maxLength={500}
+                  rows={5}
+                  disabled={!canEditTeam(match?.team ?? "")}
+                  className="resize-none"
+                />
+                <p className="mt-1.5 text-right text-xs text-muted-foreground">
+                  {(notes ?? "").length} / 500
+                </p>
+              </div>
+              {notes && (
+                <p className="hidden print:block whitespace-pre-wrap text-sm">{notes}</p>
+              )}
+              {!notes && (
+                <p className="hidden print:block text-sm text-muted-foreground italic">—</p>
+              )}
             </CardContent>
           </Card>
         </section>
