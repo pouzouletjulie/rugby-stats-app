@@ -321,6 +321,7 @@ function PlaquageEditForm({
           min={0}
           value={volume}
           onChange={(e) => setVolume(Math.max(0, Number(e.target.value)))}
+          onFocus={(e) => e.target.select()}
           className="w-28 text-center"
         />
       </div>
@@ -918,6 +919,7 @@ function MatchPage() {
                           min={0}
                           value={bulkVolume}
                           onChange={(e) => setBulkVolume(Math.max(0, Number(e.target.value)))}
+                          onFocus={(e) => e.target.select()}
                           className="text-center w-28"
                         />
                       </div>
