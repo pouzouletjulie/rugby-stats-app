@@ -1180,6 +1180,51 @@ function AnalysePage() {
                 <FieldZoneBar meudon={japTroisQuarts.pressionKick.parZone} adversaire={{}} />
               </CardContent>
             </Card>
+            {(() => {
+              const PRESSION_KINDS = ["chandelle", "box_kick", "par_dessus", "rasant", "renvoi_22", "renvoi_enbut"];
+              const counts = new Map<number, number>();
+              for (const e of events) {
+                if (e.deleted_at || e.event_type !== "jeu_au_pied" || e.team_side !== "meudon") continue;
+                const kind = String(e.payload?.["kind"] ?? "");
+                if (!PRESSION_KINDS.includes(kind) || !e.player_number) continue;
+                counts.set(e.player_number, (counts.get(e.player_number) ?? 0) + 1);
+              }
+              if (!counts.size) return null;
+              const rows = [...counts.entries()]
+                .map(([num, vol]) => {
+                  const p = players.find((x) => x.number === num);
+                  const name = p
+                    ? [p.first_name, p.last_name].filter(Boolean).join(" ") || `n°${num}`
+                    : `n°${num}`;
+                  return { num, name, vol };
+                })
+                .sort((a, b) => b.vol - a.vol);
+              return (
+                <Card>
+                  <CardHeader><CardTitle className="text-sm uppercase">Détail par joueur</CardTitle></CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
+                          <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Volume</th>
+                        </tr>
+                      </thead>
+                      <tbody className="tabular-nums">
+                        {rows.map((r) => (
+                          <tr key={r.num} className="border-b last:border-0">
+                            <td className="py-1.5 font-medium">
+                              <span className="mr-1.5 text-xs text-muted-foreground">n°{r.num}</span>{r.name}
+                            </td>
+                            <td className="py-1.5 pr-4">{r.vol}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </div>
 
           {/* ── RENVOI ── */}
