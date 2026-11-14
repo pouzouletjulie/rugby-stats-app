@@ -372,15 +372,24 @@ function CartonSheet({
 }
 
 function PointsSheet({
+  players,
   onSubmit,
 }: {
-  onSubmit: (team: "meudon" | "adversaire", kind: string) => void;
+  players: MatchPlayer[];
+  onSubmit: (team: "meudon" | "adversaire", kind: string, player: number | null) => void;
 }) {
   const [team, setTeam] = useState<"meudon" | "adversaire">("meudon");
   const [kind, setKind] = useState<string>("essai");
+  const [player, setPlayer] = useState<number | null>(null);
   return (
     <div className="space-y-4">
-      <TeamToggle value={team} onChange={setTeam} />
+      <TeamToggle
+        value={team}
+        onChange={(t) => {
+          setTeam(t);
+          setPlayer(null);
+        }}
+      />
       <div className="grid grid-cols-2 gap-2">
         {POINT_KINDS.map((k) => (
           <button
@@ -399,9 +408,17 @@ function PointsSheet({
           </button>
         ))}
       </div>
+      {team === "meudon" && players.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Joueur (optionnel)
+          </p>
+          <PlayerPicker players={players} value={player} onChange={setPlayer} />
+        </div>
+      )}
       <SubmitBtn
         label="Enregistrer"
-        onClick={() => onSubmit(team, kind)}
+        onClick={() => onSubmit(team, kind, player)}
       />
     </div>
   );
@@ -621,8 +638,9 @@ function LivePage() {
       case "points":
         return (
           <PointsSheet
-            onSubmit={(team, kind) =>
-              insertEvent("points", team, null, { kind })
+            players={players}
+            onSubmit={(team, kind, player) =>
+              insertEvent("points", team, player, { kind })
             }
           />
         );
