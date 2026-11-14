@@ -1108,7 +1108,7 @@ function MatchPage() {
       />
 
       <Dialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Corriger l'événement</DialogTitle>
           </DialogHeader>
