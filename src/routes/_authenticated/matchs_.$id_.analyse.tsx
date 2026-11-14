@@ -471,6 +471,39 @@ function AnalysePage() {
     document.title = prevTitle;
   };
 
+  // ── Flags de visibilité des sections ──────────────────────
+  const hasCartons = (["meudon", "adversaire"] as const).some((s) =>
+    stats.sides[s].cartons.blanc + stats.sides[s].cartons.jaune + stats.sides[s].cartons.bleu + stats.sides[s].cartons.rouge > 0,
+  );
+  const hasEnAvants = stats.sides.meudon.enAvants + stats.sides.adversaire.enAvants > 0;
+  const hasPenalitesConcedees = stats.sides.meudon.penalitesConcedees + stats.sides.adversaire.penalitesConcedees > 0;
+  const hasEntrees22 = stats.sides.meudon.entrees22 > 0;
+  const hasTouche = toucheAvants.meudon.total + toucheAvants.adversaire.total > 0;
+  const hasMelee = meleeAvants.meudon.total + meleeAvants.adversaire.total > 0;
+  const hasConquete = hasTouche || hasMelee;
+  const hasJap =
+    japTroisQuarts.engagement.total > 0 ||
+    japTroisQuarts.degagement.total > 0 ||
+    japTroisQuarts.pressionKick.total > 0 ||
+    japTroisQuarts.renvoi.total > 0 ||
+    receptionStats.total > 0 ||
+    stats.sides.meudon.penalitesButTentees > 0 ||
+    stats.sides.meudon.transformationsTentees > 0;
+  const _sMap = new Map(stats.players.map((p) => [p.number, p]));
+  const plaqRows = [...players]
+    .map((pl) => ({
+      number: pl.number,
+      name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
+      plaquages: _sMap.get(pl.number)?.plaquages ?? 0,
+    }))
+    .filter((r) => r.plaquages > 0)
+    .sort((a, b) => b.plaquages - a.plaquages);
+  const hasIndivRows = players.some((pl) => {
+    const s = _sMap.get(pl.number);
+    return (s?.essais ?? 0) > 0 || (s?.points ?? 0) > 0 || (s?.cartonsBlanc ?? 0) > 0 || (s?.cartonsJaune ?? 0) > 0 || (s?.cartonsBleu ?? 0) > 0 || (s?.cartonsRouge ?? 0) > 0;
+  });
+  const hasIndivStats = hasIndivRows || plaqRows.length > 0;
+
   if (matchQ.isLoading) return <AppShell><p className="text-sm text-muted-foreground">Chargement…</p></AppShell>;
 
   return (
@@ -585,66 +618,74 @@ function AnalysePage() {
           </Card>
 
           {/* Cartons + En-avants + Pénalités */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle className="text-xs uppercase text-muted-foreground">Cartons</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {(["meudon", "adversaire"] as const).map((side) => (
-                  <div key={side}>
-                    <p className="mb-1 text-xs text-muted-foreground">{side === "meudon" ? "AS Meudon" : "Adversaire"}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-4 w-4 shrink-0 rounded-sm border border-border bg-white" />
-                      <span className="tabular-nums">{stats.sides[side].cartons.blanc}</span>
-                      <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-yellow-400" />
-                      <span className="tabular-nums">{stats.sides[side].cartons.jaune}</span>
-                      <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-blue-500" />
-                      <span className="tabular-nums">{stats.sides[side].cartons.bleu}</span>
-                      <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-red-600" />
-                      <span className="tabular-nums">{stats.sides[side].cartons.rouge}</span>
+          {(hasCartons || hasEnAvants || hasPenalitesConcedees) && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {hasCartons && (
+                <Card>
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-xs uppercase text-muted-foreground">Cartons</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {(["meudon", "adversaire"] as const).map((side) => (
+                      <div key={side}>
+                        <p className="mb-1 text-xs text-muted-foreground">{side === "meudon" ? "AS Meudon" : "Adversaire"}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-4 w-4 shrink-0 rounded-sm border border-border bg-white" />
+                          <span className="tabular-nums">{stats.sides[side].cartons.blanc}</span>
+                          <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-yellow-400" />
+                          <span className="tabular-nums">{stats.sides[side].cartons.jaune}</span>
+                          <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-blue-500" />
+                          <span className="tabular-nums">{stats.sides[side].cartons.bleu}</span>
+                          <span className="inline-block h-4 w-4 shrink-0 rounded-sm bg-red-600" />
+                          <span className="tabular-nums">{stats.sides[side].cartons.rouge}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+              {hasEnAvants && (
+                <Card>
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-xs uppercase text-muted-foreground">En-avants</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1.5 text-sm">
+                    <div>
+                      <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
+                      <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.enAvants.mt1} · 2e MT : {generalParPeriode.meudon.enAvants.mt2}</p>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle className="text-xs uppercase text-muted-foreground">En-avants</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5 text-sm">
-                <div>
-                  <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.enAvants}</span></p>
-                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.enAvants.mt1} · 2e MT : {generalParPeriode.meudon.enAvants.mt2}</p>
-                </div>
-                <div>
-                  <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
-                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.enAvants.mt1} · 2e MT : {generalParPeriode.adversaire.enAvants.mt2}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-1">
-                <CardTitle className="text-xs uppercase text-muted-foreground">Pénalités concédées</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5 text-sm">
-                <div>
-                  <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.penalitesConcedees}</span></p>
-                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.penalites.mt1} · 2e MT : {generalParPeriode.meudon.penalites.mt2}</p>
-                </div>
-                <div>
-                  <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.penalitesConcedees}</span></p>
-                  <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.penalites.mt1} · 2e MT : {generalParPeriode.adversaire.penalites.mt2}</p>
-                </div>
-                {penaltoucheStats.tentees > 0 && (
-                  <div className="border-t pt-1.5">
-                    <p className="text-xs text-muted-foreground">Pénaltouches trouvées</p>
-                    <p className="font-semibold tabular-nums">{penaltoucheStats.trouvees}/{penaltoucheStats.tentees} <span className="text-xs font-normal text-muted-foreground">({pct(penaltoucheStats.trouvees, penaltoucheStats.tentees)})</span></p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                    <div>
+                      <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.enAvants}</span></p>
+                      <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.enAvants.mt1} · 2e MT : {generalParPeriode.adversaire.enAvants.mt2}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {hasPenalitesConcedees && (
+                <Card>
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-xs uppercase text-muted-foreground">Pénalités concédées</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1.5 text-sm">
+                    <div>
+                      <p>AS Meudon : <span className="font-semibold tabular-nums">{stats.sides.meudon.penalitesConcedees}</span></p>
+                      <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.meudon.penalites.mt1} · 2e MT : {generalParPeriode.meudon.penalites.mt2}</p>
+                    </div>
+                    <div>
+                      <p>Adversaire : <span className="font-semibold tabular-nums">{stats.sides.adversaire.penalitesConcedees}</span></p>
+                      <p className="text-xs text-muted-foreground">1re MT : {generalParPeriode.adversaire.penalites.mt1} · 2e MT : {generalParPeriode.adversaire.penalites.mt2}</p>
+                    </div>
+                    {penaltoucheStats.tentees > 0 && (
+                      <div className="border-t pt-1.5">
+                        <p className="text-xs text-muted-foreground">Pénaltouches trouvées</p>
+                        <p className="font-semibold tabular-nums">{penaltoucheStats.trouvees}/{penaltoucheStats.tentees} <span className="text-xs font-normal text-muted-foreground">({pct(penaltoucheStats.trouvees, penaltoucheStats.tentees)})</span></p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
           {/* Turnovers */}
           {(turnoverBreakdown.byNature.length > 0 || turnoverBreakdown.byPlayer.length > 0) && (
@@ -765,202 +806,207 @@ function AnalysePage() {
           )}
 
           {/* Entrées 22 Meudon uniquement */}
-          <Card>
-            <CardHeader className="pb-1">
-              <CardTitle className="text-xs uppercase text-muted-foreground">
-                Entrées dans les 22 — AS Meudon
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{stats.sides.meudon.entrees22}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Efficaces : {stats.sides.meudon.entrees22Efficaces}
-                {stats.sides.meudon.entrees22 > 0
-                  ? ` (${Math.round((stats.sides.meudon.entrees22Efficaces / stats.sides.meudon.entrees22) * 100)} %)`
-                  : ""}
-              </p>
-            </CardContent>
-          </Card>
+          {hasEntrees22 && (
+            <Card>
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xs uppercase text-muted-foreground">
+                  Entrées dans les 22 — AS Meudon
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold tabular-nums">{stats.sides.meudon.entrees22}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Efficaces : {stats.sides.meudon.entrees22Efficaces}
+                  {` (${Math.round((stats.sides.meudon.entrees22Efficaces / stats.sides.meudon.entrees22) * 100)} %)`}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </section>
 
-        <section className="analyse-section space-y-6">
-          <h2 className="text-xl font-bold uppercase tracking-wide">Conquête</h2>
+        {hasConquete && (
+          <section className="analyse-section space-y-6">
+            <h2 className="text-xl font-bold uppercase tracking-wide">Conquête</h2>
 
-          {/* ── TOUCHE ── */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Touche</h3>
+            {/* ── TOUCHE ── */}
+            {hasTouche && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Touche</h3>
 
-            {/* Totaux */}
-            <div className="grid grid-cols-2 gap-3">
-              {(["meudon", "adversaire"] as const).map((side) => {
-                const t = toucheAvants[side];
-                const perdues = t.total - t.gagnees;
-                return (
-                  <Card key={side}>
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-xs uppercase text-muted-foreground">
-                        {side === "meudon" ? "AS Meudon" : "Adversaire"}
-                      </CardTitle>
+                {/* Totaux */}
+                <div className="grid grid-cols-2 gap-3">
+                  {(["meudon", "adversaire"] as const).map((side) => {
+                    const t = toucheAvants[side];
+                    const perdues = t.total - t.gagnees;
+                    return (
+                      <Card key={side}>
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-xs uppercase text-muted-foreground">
+                            {side === "meudon" ? "AS Meudon" : "Adversaire"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold tabular-nums">{t.total}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Perdues : {perdues}{t.total > 0 ? ` (${Math.round(perdues / t.total * 100)} %)` : ""}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Par bloc — AS Meudon uniquement */}
+                {Object.keys(toucheAvants.meudon.parBloc).length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Par bloc — AS Meudon</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-2xl font-bold tabular-nums">{t.total}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Perdues : {perdues}{t.total > 0 ? ` (${Math.round(perdues / t.total * 100)} %)` : ""}
-                      </p>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left">Bloc</th>
+                            <th className="py-1.5 text-right">Nb</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {["0", "1", "2", "3"].map((k) => {
+                            const m = toucheAvants.meudon.parBloc[k] ?? 0;
+                            if (m === 0) return null;
+                            return (
+                              <tr key={k} className="border-b last:border-0">
+                                <td className="py-1.5">{blocLabel(k)}</td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{m}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-
-            {/* Par bloc — AS Meudon uniquement */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase">Par bloc — AS Meudon</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Object.keys(toucheAvants.meudon.parBloc).length === 0 ? (
-                  <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs uppercase text-muted-foreground">
-                        <th className="py-1.5 text-left">Bloc</th>
-                        <th className="py-1.5 text-right">Nb</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {["0", "1", "2", "3"].map((k) => {
-                        const m = toucheAvants.meudon.parBloc[k] ?? 0;
-                        if (m === 0) return null;
-                        return (
-                          <tr key={k} className="border-b last:border-0">
-                            <td className="py-1.5">{blocLabel(k)}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{m}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
                 )}
-              </CardContent>
-            </Card>
 
-            {/* Par zone */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FieldZoneBar meudon={toucheAvants.meudon.parZone} adversaire={toucheAvants.adversaire.parZone} />
-              </CardContent>
-            </Card>
-
-            {/* Suite de jeu */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase">Suite de jeu — AS Meudon</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Object.keys(toucheAvants.meudon.parSuite).length === 0 ? (
-                  <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs uppercase text-muted-foreground">
-                        <th className="py-1.5 text-left">Suite</th>
-                        <th className="py-1.5 text-right">Nb</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(toucheAvants.meudon.parSuite)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([suite, count]) => (
-                          <tr key={suite} className="border-b last:border-0">
-                            <td className="py-1.5">{suite || "—"}</td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ── MÊLÉE ── */}
-          <div className="space-y-3 print-break-before">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Mêlée</h3>
-
-            {/* Totaux */}
-            <div className="grid grid-cols-2 gap-3">
-              {(["meudon", "adversaire"] as const).map((side) => {
-                const m = meleeAvants[side];
-                const perdues = m.total - m.gagnees;
-                return (
-                  <Card key={side}>
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-xs uppercase text-muted-foreground">
-                        {side === "meudon" ? "AS Meudon" : "Adversaire"}
-                      </CardTitle>
+                {/* Par zone */}
+                {(Object.keys(toucheAvants.meudon.parZone).length > 0 || Object.keys(toucheAvants.adversaire.parZone).length > 0) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-2xl font-bold tabular-nums">{m.total}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Perdues : {perdues}{m.total > 0 ? ` (${Math.round(perdues / m.total * 100)} %)` : ""}
-                      </p>
+                      <FieldZoneBar meudon={toucheAvants.meudon.parZone} adversaire={toucheAvants.adversaire.parZone} />
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-
-            {/* Par zone */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FieldZoneBar meudon={meleeAvants.meudon.parZone} adversaire={meleeAvants.adversaire.parZone} />
-              </CardContent>
-            </Card>
-
-            {/* Sorties */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase">Sorties — AS Meudon</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Object.keys(meleeAvants.meudon.parSortie).length === 0 ? (
-                  <p className="py-2 text-sm text-muted-foreground">Aucune donnée</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-xs uppercase text-muted-foreground">
-                        <th className="py-1.5 text-left">Type</th>
-                        <th className="py-1.5 text-right">Nb</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(meleeAvants.meudon.parSortie)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([k, v]) => (
-                          <tr key={k} className="border-b last:border-0">
-                            <td className="py-1.5">
-                              {k === "8" ? "Sortie du 8" : k === "9" ? "Sortie du 9" : k === "bras_casse" ? "Bras cassé" : k}
-                            </td>
-                            <td className="py-1.5 text-right tabular-nums font-medium">{v}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </section>
 
-        <section className="analyse-section space-y-6">
+                {/* Suite de jeu */}
+                {Object.keys(toucheAvants.meudon.parSuite).length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Suite de jeu — AS Meudon</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left">Suite</th>
+                            <th className="py-1.5 text-right">Nb</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(toucheAvants.meudon.parSuite)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([suite, count]) => (
+                              <tr key={suite} className="border-b last:border-0">
+                                <td className="py-1.5">{suite || "—"}</td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{count}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* ── MÊLÉE ── */}
+            {hasMelee && (
+              <div className="space-y-3 print-break-before">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Mêlée</h3>
+
+                {/* Totaux */}
+                <div className="grid grid-cols-2 gap-3">
+                  {(["meudon", "adversaire"] as const).map((side) => {
+                    const m = meleeAvants[side];
+                    const perdues = m.total - m.gagnees;
+                    return (
+                      <Card key={side}>
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-xs uppercase text-muted-foreground">
+                            {side === "meudon" ? "AS Meudon" : "Adversaire"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold tabular-nums">{m.total}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Perdues : {perdues}{m.total > 0 ? ` (${Math.round(perdues / m.total * 100)} %)` : ""}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Par zone */}
+                {(Object.keys(meleeAvants.meudon.parZone).length > 0 || Object.keys(meleeAvants.adversaire.parZone).length > 0) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FieldZoneBar meudon={meleeAvants.meudon.parZone} adversaire={meleeAvants.adversaire.parZone} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Sorties */}
+                {Object.keys(meleeAvants.meudon.parSortie).length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase">Sorties — AS Meudon</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs uppercase text-muted-foreground">
+                            <th className="py-1.5 text-left">Type</th>
+                            <th className="py-1.5 text-right">Nb</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(meleeAvants.meudon.parSortie)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([k, v]) => (
+                              <tr key={k} className="border-b last:border-0">
+                                <td className="py-1.5">
+                                  {k === "8" ? "Sortie du 8" : k === "9" ? "Sortie du 9" : k === "bras_casse" ? "Bras cassé" : k}
+                                </td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{v}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {hasJap && (
+          <section className="analyse-section space-y-6">
           <h2 className="text-xl font-bold uppercase tracking-wide">Jeu au pied</h2>
 
           {/* ── PÉNALITÉS AU BUT ── */}
@@ -1072,32 +1118,31 @@ function AnalysePage() {
           })()}
 
           {/* ── ENGAGEMENT ── */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Engagement — AS Meudon</h3>
-            <Card>
-              <CardContent className="pt-4">
-                <table className="w-full text-sm">
-                  <tbody>
-                    {[
-                      { label: "Récupéré", value: japTroisQuarts.engagement.recupere },
-                      { label: "Plaquage immédiat", value: japTroisQuarts.engagement.plaquageImmédiat },
-                      { label: "Moins de 10m", value: japTroisQuarts.engagement.moins10m },
-                      { label: "Direct en touche", value: japTroisQuarts.engagement.directTouche },
-                      { label: "Autre", value: japTroisQuarts.engagement.autre },
-                    ].filter(({ value }) => value > 0).map(({ label, value }) => (
-                      <tr key={label} className="border-b last:border-0">
-                        <td className="py-1.5">{label}</td>
-                        <td className="py-1.5 text-right tabular-nums font-semibold">{value}</td>
-                      </tr>
-                    ))}
-                    {japTroisQuarts.engagement.total === 0 && (
-                      <tr><td colSpan={2} className="py-2 text-muted-foreground">Aucune donnée</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
+          {japTroisQuarts.engagement.total > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Engagement — AS Meudon</h3>
+              <Card>
+                <CardContent className="pt-4">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {[
+                        { label: "Récupéré", value: japTroisQuarts.engagement.recupere },
+                        { label: "Plaquage immédiat", value: japTroisQuarts.engagement.plaquageImmédiat },
+                        { label: "Moins de 10m", value: japTroisQuarts.engagement.moins10m },
+                        { label: "Direct en touche", value: japTroisQuarts.engagement.directTouche },
+                        { label: "Autre", value: japTroisQuarts.engagement.autre },
+                      ].filter(({ value }) => value > 0).map(({ label, value }) => (
+                        <tr key={label} className="border-b last:border-0">
+                          <td className="py-1.5">{label}</td>
+                          <td className="py-1.5 text-right tabular-nums font-semibold">{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* ── RÉCEPTION DE COUP D'ENVOI ── */}
           {receptionStats.total > 0 && (
@@ -1115,41 +1160,45 @@ function AnalysePage() {
           )}
 
           {/* ── DÉGAGEMENT ── */}
-          <div className="space-y-3 print-break-before">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Dégagement — AS Meudon</h3>
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-2xl font-bold tabular-nums">{japTroisQuarts.degagement.total}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Total</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
-              <CardContent>
-                <FieldZoneBar meudon={japTroisQuarts.degagement.parZone} adversaire={{}} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <table className="w-full text-sm">
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="py-1.5">En touche</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.touche}</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-1.5">Direct en touche</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.toucheDirecte}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1.5">Gain de terrain</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.degagement.gainTerrain, japTroisQuarts.degagement.total)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
+          {japTroisQuarts.degagement.total > 0 && (
+            <div className="space-y-3 print-break-before">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Dégagement — AS Meudon</h3>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-2xl font-bold tabular-nums">{japTroisQuarts.degagement.total}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Total</p>
+                </CardContent>
+              </Card>
+              {Object.keys(japTroisQuarts.degagement.parZone).length > 0 && (
+                <Card>
+                  <CardHeader><CardTitle className="text-sm uppercase">Par zone de terrain</CardTitle></CardHeader>
+                  <CardContent>
+                    <FieldZoneBar meudon={japTroisQuarts.degagement.parZone} adversaire={{}} />
+                  </CardContent>
+                </Card>
+              )}
+              <Card>
+                <CardContent className="pt-4">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-1.5">En touche</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.touche}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-1.5">Direct en touche</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{japTroisQuarts.degagement.toucheDirecte}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-1.5">Gain de terrain</td>
+                        <td className="py-1.5 text-right tabular-nums font-semibold">{pct(japTroisQuarts.degagement.gainTerrain, japTroisQuarts.degagement.total)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* ── CHANDELLE / BOX KICK ── */}
           <div className="space-y-3">
@@ -1277,8 +1326,10 @@ function AnalysePage() {
           )}
 
         </section>
+        )}
 
-        <section className="analyse-section">
+        {hasIndivStats && (
+          <section className="analyse-section">
           <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Stats indiv</h2>
           {(() => {
             const toggleIndivSort = (key: IndivSortKey) => {
@@ -1286,10 +1337,9 @@ function AnalysePage() {
               else { setIndivSortKey(key); setIndivSortDir(key === "name" ? "asc" : "desc"); }
             };
 
-            const statsMap = new Map(stats.players.map((p) => [p.number, p]));
-            const rows = [...players]
+            const rows = players
               .map((pl) => {
-                const s = statsMap.get(pl.number);
+                const s = _sMap.get(pl.number);
                 return {
                   number: pl.number,
                   name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
@@ -1307,6 +1357,7 @@ function AnalysePage() {
                 if (indivSortKey === "name") return dir * a.name.localeCompare(b.name);
                 return dir * (a[indivSortKey] - b[indivSortKey]);
               });
+            if (rows.length === 0) return null;
 
             const Th = ({ k, label }: { k: IndivSortKey; label: string }) => (
               <th
@@ -1357,46 +1408,33 @@ function AnalysePage() {
               </Card>
             );
           })()}
-          {(() => {
-            const statsMap = new Map(stats.players.map((p) => [p.number, p]));
-            const plaqRows = [...players]
-              .map((pl) => ({
-                number: pl.number,
-                name: [pl.first_name, pl.last_name].filter(Boolean).join(" ") || `n°${pl.number}`,
-                plaquages: statsMap.get(pl.number)?.plaquages ?? 0,
-              }))
-              .filter((r) => r.plaquages > 0)
-              .sort((a, b) => b.plaquages - a.plaquages);
-
-            if (!plaqRows.length) return null;
-
-            return (
-              <Card className="mt-4">
-                <CardHeader><CardTitle className="uppercase">Plaquages — {plaqRows.reduce((s, r) => s + r.plaquages, 0)}</CardTitle></CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
-                        <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Plaquages</th>
+          {plaqRows.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader><CardTitle className="uppercase">Plaquages — {plaqRows.reduce((s, r) => s + r.plaquages, 0)}</CardTitle></CardHeader>
+              <CardContent className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Joueur</th>
+                      <th className="py-2 pr-4 text-left text-xs uppercase text-muted-foreground">Plaquages</th>
+                    </tr>
+                  </thead>
+                  <tbody className="tabular-nums">
+                    {plaqRows.map((r) => (
+                      <tr key={r.number} className="border-b last:border-0">
+                        <td className="py-1.5 font-medium">
+                          <span className="mr-1.5 text-xs text-muted-foreground">n°{r.number}</span>{r.name}
+                        </td>
+                        <td className="py-1.5 pr-4">{r.plaquages}</td>
                       </tr>
-                    </thead>
-                    <tbody className="tabular-nums">
-                      {plaqRows.map((r) => (
-                        <tr key={r.number} className="border-b last:border-0">
-                          <td className="py-1.5 font-medium">
-                            <span className="mr-1.5 text-xs text-muted-foreground">n°{r.number}</span>{r.name}
-                          </td>
-                          <td className="py-1.5 pr-4">{r.plaquages}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            );
-          })()}
-        </section>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+          </section>
+        )}
 
         <section className="analyse-section">
           <h2 className="text-xl font-bold uppercase tracking-wide mb-4">Notes</h2>
