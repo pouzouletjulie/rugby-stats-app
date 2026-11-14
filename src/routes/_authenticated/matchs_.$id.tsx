@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, BarChart2, Lock, Pencil, RotateCcw, Trash2, Undo2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, BarChart2, Lock, Pencil, Radio, RotateCcw, Trash2, Undo2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { EventForm, defaultDraft, type EventDraft } from "@/components/EventForm";
@@ -747,6 +747,13 @@ function MatchPage() {
                   <BarChart2 className="size-4" /> Analyse
                 </Link>
               </Button>
+              {editable && (
+                <Button asChild size="sm" variant="secondary" className="shrink-0">
+                  <Link to="/matchs/$id/live" params={{ id }}>
+                    <Radio className="size-4" /> Live
+                  </Link>
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-3 font-display font-bold tabular-nums">
               <div className="flex flex-col items-end gap-0.5">
