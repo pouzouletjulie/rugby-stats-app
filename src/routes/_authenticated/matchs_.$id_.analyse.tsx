@@ -130,7 +130,7 @@ function AnalysePage() {
   }, [id, qc]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value.slice(0, 500);
+    const value = e.target.value.slice(0, 1000);
     setNotes(value);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => void saveNotes(value), 800);
@@ -1445,13 +1445,13 @@ function AnalysePage() {
                   value={notes ?? ""}
                   onChange={handleNotesChange}
                   placeholder="Notes sur le match…"
-                  maxLength={500}
+                  maxLength={1000}
                   rows={5}
                   disabled={!canEditTeam(match?.team ?? "")}
                   className="resize-none"
                 />
                 <p className="mt-1.5 text-right text-xs text-muted-foreground">
-                  {(notes ?? "").length} / 500
+                  {(notes ?? "").length} / 1000
                 </p>
               </div>
               {notes && (
