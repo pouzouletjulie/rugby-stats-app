@@ -327,7 +327,7 @@ function JapComboCard({ data }: { data: Array<{ label: string; volume: number; p
 function StatsPage() {
   const { isCoach, coachCategories } = useAuth();
 
-  const defaultTeam = isCoach && coachCategories.length > 0 ? coachCategories[0] : TEAMS[0].value;
+  const defaultTeam = isCoach && coachCategories.length > 0 ? coachCategories[0] : "senior1";
   const [team, setTeam] = useState<string>(defaultTeam);
   const [competition, setCompetition] = useState<string>("all");
 
@@ -472,18 +472,18 @@ function StatsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <MetricBar
                 title="Réussite touche — Meudon"
-                data={pts("toucheReussite").filter((d) =>
-                  metrics[metrics.findIndex((m) => m.label === d.label)]?.touchesTotal > 0,
-                )}
+                data={metrics
+                  .filter((m) => m.touchesTotal > 0)
+                  .map((m) => ({ label: m.label, value: m.toucheReussite, opponent: m.opponent, date: m.date }))}
                 isPercent
                 color="#2563eb"
                 note={`${metrics.filter((m) => m.touchesTotal > 0).length} matchs`}
               />
               <MetricBar
                 title="Réussite mêlée — Meudon"
-                data={pts("meleeReussite").filter((d) =>
-                  metrics[metrics.findIndex((m) => m.label === d.label)]?.meleesTotal > 0,
-                )}
+                data={metrics
+                  .filter((m) => m.meleesTotal > 0)
+                  .map((m) => ({ label: m.label, value: m.meleeReussite, opponent: m.opponent, date: m.date }))}
                 isPercent
                 color="#7c3aed"
                 note={`${metrics.filter((m) => m.meleesTotal > 0).length} matchs`}
