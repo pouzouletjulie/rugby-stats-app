@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, LogOut, Shield, ClipboardList, Users, UserRound } from "lucide-react";
+import { Eye, EyeOff, LogOut, Shield, ClipboardList, Users, UserRound, TrendingUp } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button asChild variant="ghost" size="sm" className="text-sidebar-foreground hover:bg-sidebar-accent">
                 <Link to="/joueurs">
                   <UserRound className="size-4" /> Joueurs
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-sidebar-foreground hover:bg-sidebar-accent">
+                <Link to="/stats">
+                  <TrendingUp className="size-4" /> Statistiques
                 </Link>
               </Button>
             </>

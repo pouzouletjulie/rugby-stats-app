@@ -19,6 +19,7 @@ import { Route as AuthenticatedMatchsIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMatchsNouveauRouteImport } from './routes/_authenticated/matchs_.nouveau'
 import { Route as AuthenticatedMatchsIdAnalyseRouteImport } from './routes/_authenticated/matchs_.$id_.analyse'
 import { Route as AuthenticatedMatchsIdLiveRouteImport } from './routes/_authenticated/matchs_.$id_.live'
+import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +73,11 @@ const AuthenticatedMatchsIdLiveRoute =
     path: '/matchs/$id/live',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/matchs/nouveau': typeof AuthenticatedMatchsNouveauRoute
   '/matchs/$id/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
   '/matchs/$id/live': typeof AuthenticatedMatchsIdLiveRoute
+  '/stats': typeof AuthenticatedStatsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/matchs/nouveau': typeof AuthenticatedMatchsNouveauRoute
   '/matchs/$id/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
   '/matchs/$id/live': typeof AuthenticatedMatchsIdLiveRoute
+  '/stats': typeof AuthenticatedStatsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,13 +115,14 @@ export interface FileRoutesById {
   '/_authenticated/matchs_/nouveau': typeof AuthenticatedMatchsNouveauRoute
   '/_authenticated/matchs_/$id_/analyse': typeof AuthenticatedMatchsIdAnalyseRoute
   '/_authenticated/matchs_/$id_/live': typeof AuthenticatedMatchsIdLiveRoute
+  '/_authenticated/stats': typeof AuthenticatedStatsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse' | '/matchs/$id/live'
+    | '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse' | '/matchs/$id/live' | '/stats'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse' | '/matchs/$id/live'
+  to: '/' | '/auth' | '/admin' | '/joueurs' | '/matchs' | '/matchs/$id' | '/matchs/nouveau' | '/matchs/$id/analyse' | '/matchs/$id/live' | '/stats'
   id:
     | '__root__'
     | '/'
@@ -126,6 +135,8 @@ export interface FileRouteTypes {
     | '/_authenticated/matchs_/nouveau'
     | '/_authenticated/matchs_/$id_/analyse'
     | '/_authenticated/matchs_/$id_/live'
+    | '/_authenticated/stats'
+    | '/_authenticated/stats'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMatchsIdLiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stats': {
+      id: '/_authenticated/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -217,6 +235,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMatchsNouveauRoute: typeof AuthenticatedMatchsNouveauRoute
   AuthenticatedMatchsIdAnalyseRoute: typeof AuthenticatedMatchsIdAnalyseRoute
   AuthenticatedMatchsIdLiveRoute: typeof AuthenticatedMatchsIdLiveRoute
+  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -227,6 +246,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMatchsNouveauRoute: AuthenticatedMatchsNouveauRoute,
   AuthenticatedMatchsIdAnalyseRoute: AuthenticatedMatchsIdAnalyseRoute,
   AuthenticatedMatchsIdLiveRoute: AuthenticatedMatchsIdLiveRoute,
+  AuthenticatedStatsRoute: AuthenticatedStatsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
