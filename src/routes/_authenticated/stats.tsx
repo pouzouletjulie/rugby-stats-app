@@ -101,8 +101,9 @@ function computeMatchMetrics(match: MatchRow, events: MatchEvent[]): MatchMetric
     if (e.payload?.["gain_terrain"] === true) japGain += 1;
   }
 
-  const d = new Date(match.match_date);
-  const label = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")} ${match.opponent.slice(0, 10)}`;
+  // Éviter le décalage timezone (new Date("YYYY-MM-DD") = minuit UTC)
+  const [, mm, dd] = match.match_date.split("-");
+  const label = `${dd}/${mm} ${match.opponent.slice(0, 10)}`;
 
   return {
     matchId: match.id,
@@ -113,7 +114,7 @@ function computeMatchMetrics(match: MatchRow, events: MatchEvent[]): MatchMetric
     touchesTotal: m.touches,
     meleeReussite: m.melees > 0 ? Math.round((m.meleesGagnees / m.melees) * 100) : null,
     meleesTotal: m.melees,
-    essais: m.essais,
+    essais: m.essais + m.essaisPenalite,
     points: m.points,
     cartonsTotal: m.cartons.blanc + m.cartons.jaune + m.cartons.bleu + m.cartons.rouge,
     plaquages,
@@ -200,7 +201,7 @@ function MetricBar({
                   <div className="rounded-lg border bg-popover p-2 shadow-md text-xs">
                     <p className="font-semibold">{d.opponent}</p>
                     <p className="text-muted-foreground">
-                      {new Date(d.date).toLocaleDateString("fr-FR")}
+                      {d.date.split("-").reverse().join("/")}
                     </p>
                     <p className="mt-1 font-bold tabular-nums">{fmtValue(d.value)}</p>
                   </div>
@@ -293,7 +294,7 @@ function JapComboCard({ data }: { data: Array<{ label: string; volume: number; p
                   <div className="rounded-lg border bg-popover p-2 shadow-md text-xs">
                     <p className="font-semibold">{d.opponent}</p>
                     <p className="text-muted-foreground">
-                      {new Date(d.date).toLocaleDateString("fr-FR")}
+                      {d.date.split("-").reverse().join("/")}
                     </p>
                     <p className="mt-1">Volume : <span className="font-bold">{d.volume}</span></p>
                     <p>Terrain : <span className="font-bold">{d.pct !== null ? `${d.pct} %` : "—"}</span></p>
@@ -331,7 +332,7 @@ function StatsPage() {
   const [team, setTeam] = useState<string>(defaultTeam);
   const [competition, setCompetition] = useState<string>("all");
 
-  // Chargement des matchs pour l'équipe choisie
+  // Chargement des matchs pour l'équipe choisie (hors brouillons)
   const matchesQ = useQuery({
     queryKey: ["stats-matches", team],
     queryFn: async () => {
@@ -339,6 +340,7 @@ function StatsPage() {
         .from("matches")
         .select("id, match_date, opponent, competition_type, team, status")
         .eq("team", team)
+        .in("status", ["en_cours", "finalise"])
         .order("match_date", { ascending: true });
       if (error) throw error;
       return (data ?? []) as MatchRow[];
@@ -554,7 +556,7 @@ function StatsPage() {
                     {metrics.map((m) => (
                       <tr key={m.matchId} className="border-b last:border-0 hover:bg-muted/30">
                         <td className="py-1.5 pr-3 text-xs text-muted-foreground">
-                          {new Date(m.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                          {m.date.split("-").reverse().slice(0, 2).join("/")}
                         </td>
                         <td className="py-1.5 pr-3 font-medium max-w-[120px] truncate">{m.opponent}</td>
                         <td className="py-1.5 pr-3 text-right font-semibold">{m.points}</td>
